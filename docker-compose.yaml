@@ -1,5 +1,46 @@
-version: '3.6'
+version: '3.3'
 services:
+  traefik:
+    image: traefik:v2.1
+    restart: always
+    container_name: "traefik"
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.file.filename=/config/dynamic_config.toml"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.http.address=:80"
+      - "--entryPoints.https.address=:443"
+      - "--certificatesresolvers.main.acme.httpchallenge=true"
+      - "--certificatesresolvers.main.acme.httpchallenge.entrypoint=http"
+      - "--certificatesresolvers.main.acme.email=esseswann@gmail.com"
+      - "--certificatesresolvers.main.acme.storage=/config/acme.json"
+    ports:
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:8080:8080"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # required for service discovery
+      - "./traefik:/config"
+    depends_on:
+      - "postgres"
+      - "frontend"
+      - "graphql-engine"
+
+  frontend:
+    image: volunteer-frontend:latest
+    restart: always
+    ports:
+      - 1486:80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=(Host(`koltsov.family`) && PathPrefix(`/`))"
+      - "traefik.http.routers.frontend.entrypoints=http"
+      - "traefik.http.routers.frontend-secure.rule=(Host(`koltsov.family`) && PathPrefix(`/`))"
+      - "traefik.http.routers.frontend-secure.entrypoints=https"
+      - "traefik.http.routers.frontend-secure.tls=true"
+      - "traefik.http.routers.frontend-secure.tls.certresolver=main"
   postgres:
     image: postgres:12
     restart: always
@@ -7,6 +48,7 @@ services:
     - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgrespassword
+
   graphql-engine:
     image: hasura/graphql-engine:v1.1.0
     ports:
@@ -14,12 +56,23 @@ services:
     depends_on:
     - "postgres"
     restart: always
+    ports:
+      - "1488:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.graphql-engine.rule=(Host(`koltsov.family`) && PathPrefix(`/v1/graphql`)) || (Host(`koltsov.family`) && PathPrefix(`/console`))"
+      - "traefik.http.routers.graphql-engine.entrypoints=http"
+      - "traefik.http.routers.graphql-engine-secure.rule=(Host(`koltsov.family`) && PathPrefix(`/v1/graphql`)) || (Host(`koltsov.family`) && PathPrefix(`/console`))"
+      - "traefik.http.routers.graphql-engine-secure.entrypoints=https"
+      - "traefik.http.routers.graphql-engine-secure.tls=true"
+      - "traefik.http.routers.graphql-engine-secure.tls.certresolver=main"
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       ## uncomment next line to set an admin secret
       # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+
 volumes:
   db_data:
 
