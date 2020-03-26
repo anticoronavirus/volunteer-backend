@@ -1,0 +1,112 @@
+- args:
+    tables:
+    - array_relationships:
+      - name: shift_professions
+        using:
+          foreign_key_constraint_on:
+            column: profession
+            table:
+              name: shift_profession
+              schema: public
+      - name: shifts
+        using:
+          manual_configuration:
+            column_mapping:
+              name: profession
+            remote_table:
+              name: profession_shifts_view
+              schema: public
+      table:
+        name: profession
+        schema: public
+    - table:
+        name: profession_shifts_view
+        schema: public
+    - array_relationships:
+      - name: professions
+        using:
+          manual_configuration:
+            column_mapping:
+              uid: shift_id
+            remote_table:
+              name: shift_professions_view
+              schema: public
+      - name: shift_professions
+        using:
+          foreign_key_constraint_on:
+            column: shift_id
+            table:
+              name: shift_profession
+              schema: public
+      - name: volunteers
+        using:
+          manual_configuration:
+            column_mapping:
+              uid: shift_id
+            remote_table:
+              name: shift_volunteers_view
+              schema: public
+      - name: volunteer_shifts
+        using:
+          foreign_key_constraint_on:
+            column: shift_id
+            table:
+              name: volunteer_shift
+              schema: public
+      configuration:
+        custom_column_names: {}
+        custom_root_fields:
+          select: shifts
+      table:
+        name: shift
+        schema: public
+    - object_relationships:
+      - name: professionByProfession
+        using:
+          foreign_key_constraint_on: profession
+      - name: shift
+        using:
+          foreign_key_constraint_on: shift_id
+      table:
+        name: shift_profession
+        schema: public
+    - table:
+        name: shift_professions_view
+        schema: public
+    - table:
+        name: shift_volunteers_view
+        schema: public
+    - array_relationships:
+      - name: shifts
+        using:
+          manual_configuration:
+            column_mapping:
+              uid: volunteer_id
+            remote_table:
+              name: volunteer_shifts_view
+              schema: public
+      - name: volunteer_shifts
+        using:
+          foreign_key_constraint_on:
+            column: volunteer_id
+            table:
+              name: volunteer_shift
+              schema: public
+      table:
+        name: volunteer
+        schema: public
+    - object_relationships:
+      - name: shift
+        using:
+          foreign_key_constraint_on: shift_id
+      - name: volunteer
+        using:
+          foreign_key_constraint_on: volunteer_id
+      table:
+        name: volunteer_shift
+        schema: public
+    - table:
+        name: volunteer_shifts_view
+        schema: public
+    version: 2
+  type: replace_metadata
