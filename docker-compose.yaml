@@ -60,9 +60,9 @@ services:
       - "1488:8080"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.graphql-engine.rule=(Host(`koltsov.family`) && PathPrefix(`/v1/graphql`)) || (Host(`koltsov.family`) && PathPrefix(`/console`))"
+      - "traefik.http.routers.graphql-engine.rule=(Host(`koltsov.family`) && PathPrefix(`/v1`)) || (Host(`koltsov.family`) && PathPrefix(`/console`))"
       - "traefik.http.routers.graphql-engine.entrypoints=http"
-      - "traefik.http.routers.graphql-engine-secure.rule=(Host(`koltsov.family`) && PathPrefix(`/v1/graphql`)) || (Host(`koltsov.family`) && PathPrefix(`/console`))"
+      - "traefik.http.routers.graphql-engine-secure.rule=(Host(`koltsov.family`) && PathPrefix(`/v1`)) || (Host(`koltsov.family`) && PathPrefix(`/console`))"
       - "traefik.http.routers.graphql-engine-secure.entrypoints=https"
       - "traefik.http.routers.graphql-engine-secure.tls=true"
       - "traefik.http.routers.graphql-engine-secure.tls.certresolver=main"
