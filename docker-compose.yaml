@@ -28,7 +28,7 @@ services:
       - "graphql-engine"
 
   frontend:
-    build: https://github.com/anticoronavirus/volunteer-frontend.git
+    image: docker.pkg.github.com/anticoronavirus/volunteer-frontend/volunteer-frontend:master
     restart: always
     ports:
       - 1486:80
