@@ -34,6 +34,9 @@ services:
       - 1486:80
     labels:
       - "traefik.enable=true"
+      - "traefik.http.middlewares.redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect.redirectscheme.permanent=true"
+      - "traefik.http.routers.frontend.middlewares=redirect@docker"
       - "traefik.http.routers.frontend.rule=(Host(`anticorona.moscow`) && PathPrefix(`/`))"
       - "traefik.http.routers.frontend.entrypoints=http"
       - "traefik.http.routers.frontend-secure.rule=(Host(`anticorona.moscow`) && PathPrefix(`/`))"
@@ -59,6 +62,9 @@ services:
       - "1488:8080"
     labels:
       - "traefik.enable=true"
+      - "traefik.http.middlewares.redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect.redirectscheme.permanent=true"
+      - "traefik.http.routers.graphql-engine.middlewares=redirect@docker"
       - "traefik.http.routers.graphql-engine.rule=(Host(`anticorona.moscow`) && PathPrefix(`/v1`)) || (Host(`anticorona.moscow`) && PathPrefix(`/console`))"
       - "traefik.http.routers.graphql-engine.entrypoints=http"
       - "traefik.http.routers.graphql-engine-secure.rule=(Host(`anticorona.moscow`) && PathPrefix(`/v1`)) || (Host(`anticorona.moscow`) && PathPrefix(`/console`))"
