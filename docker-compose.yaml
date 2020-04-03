@@ -82,6 +82,8 @@ services:
     depends_on:
     - "postgres"
     restart: always
+    expose:
+    - "8000"
     environment:
       AERO_LOGIN: ${AERO_LOGIN}
       AERO_TOKEN: ${AERO_TOKEN}
