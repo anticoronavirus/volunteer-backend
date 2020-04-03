@@ -74,16 +74,16 @@ services:
       HASURA_GRAPHQL_ADMIN_SECRET: ${ADMIN_SECRET}
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "voyeur"
 
-    auth:
-      image: docker.pkg.github.com/anticoronavirus/volunteer-auth/volunteer-auth:master
-      depends_on:
-      - "postgres"
-      restart: always
-      environment:
-        AERO_LOGIN: ${AERO_LOGIN}
-        AERO_TOKEN: ${AERO_TOKEN}
-        JWT_SECRET: ${JWT_SECRET}
-        DATABASE_URL: "postgresql://postgres:${DATABASE_PASSWORD}@postgres:5432/postgres"
+  auth:
+    image: docker.pkg.github.com/anticoronavirus/volunteer-auth/volunteer-auth:master
+    depends_on:
+    - "postgres"
+    restart: always
+    environment:
+      AERO_LOGIN: ${AERO_LOGIN}
+      AERO_TOKEN: ${AERO_TOKEN}
+      JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: "postgresql://postgres:${DATABASE_PASSWORD}@postgres:5432/postgres"
 
 volumes:
   db_data:
