@@ -52,13 +52,9 @@ services:
 
   graphql-engine:
     image: hasura/graphql-engine:v1.1.0
-    ports:
-    - "8080:8080"
     depends_on:
     - "postgres"
     restart: always
-    ports:
-      - "1488:8080"
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.redirect.redirectscheme.scheme=https"
@@ -80,6 +76,8 @@ services:
 
     auth:
       image: docker.pkg.github.com/anticoronavirus/volunteer-auth/volunteer-auth:master
+      depends_on:
+      - "postgres"
       restart: always
       environment:
         AERO_LOGIN: ${AERO_LOGIN}
