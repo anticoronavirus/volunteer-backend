@@ -1,90 +1,85 @@
 - args:
+    remote_schemas:
+    - definition:
+        forward_client_headers: true
+        timeout_seconds: 60
+        url: http://ec2-3-15-0-177.us-east-2.compute.amazonaws.com:8841
+      name: auth
     tables:
     - array_relationships:
-      - name: shift_professions
+      - name: periods
         using:
           foreign_key_constraint_on:
-            column: profession
+            column: hospital_id
             table:
-              name: shift_profession
+              name: period
               schema: public
-      - name: shifts
+      - name: special_shifts
         using:
-          manual_configuration:
-            column_mapping:
-              name: profession
-            remote_table:
-              name: profession_shifts_view
+          foreign_key_constraint_on:
+            column: hospital_id
+            table:
+              name: special_shift
               schema: public
+      select_permissions:
+      - permission:
+          columns:
+          - uid
+          - address
+          - name
+          - number
+          - shortname
+          filter: {}
+        role: voyeur
+      table:
+        name: hospital
+        schema: public
+    - object_relationships:
+      - name: hospital
+        using:
+          foreign_key_constraint_on: hospital_id
+      select_permissions:
+      - permission:
+          columns:
+          - start
+          - end
+          - needs
+          - hospital_id
+          filter: {}
+        role: voyeur
+      table:
+        name: period
+        schema: public
+    - select_permissions:
+      - permission:
+          columns:
+          - name
+          filter: {}
+        role: voyeur
       table:
         name: profession
         schema: public
     - table:
-        name: profession_shifts_view
-        schema: public
-    - array_relationships:
-      - name: professions
-        using:
-          manual_configuration:
-            column_mapping:
-              uid: shift_id
-            remote_table:
-              name: shift_professions_view
-              schema: public
-      - name: shift_professions
-        using:
-          foreign_key_constraint_on:
-            column: shift_id
-            table:
-              name: shift_profession
-              schema: public
-      - name: volunteers
-        using:
-          manual_configuration:
-            column_mapping:
-              uid: shift_id
-            remote_table:
-              name: shift_volunteers_view
-              schema: public
-      - name: volunteer_shifts
-        using:
-          foreign_key_constraint_on:
-            column: shift_id
-            table:
-              name: volunteer_shift
-              schema: public
-      configuration:
-        custom_column_names: {}
-        custom_root_fields:
-          select: shifts
-      table:
-        name: shift
+        name: role
         schema: public
     - object_relationships:
-      - name: professionByProfession
+      - name: hospital
         using:
-          foreign_key_constraint_on: profession
-      - name: shift
-        using:
-          foreign_key_constraint_on: shift_id
+          foreign_key_constraint_on: hospital_id
+      select_permissions:
+      - permission:
+          columns:
+          - start
+          - end
+          - needs
+          - date
+          - hospital_id
+          filter: {}
+        role: voyeur
       table:
-        name: shift_profession
-        schema: public
-    - table:
-        name: shift_professions_view
-        schema: public
-    - table:
-        name: shift_volunteers_view
+        name: special_shift
         schema: public
     - array_relationships:
-      - name: shifts
-        using:
-          manual_configuration:
-            column_mapping:
-              uid: volunteer_id
-            remote_table:
-              name: volunteer_shifts_view
-              schema: public
       - name: volunteer_shifts
         using:
           foreign_key_constraint_on:
@@ -92,21 +87,65 @@
             table:
               name: volunteer_shift
               schema: public
+      select_permissions:
+      - permission:
+          columns:
+          - uid
+          - fname
+          - mname
+          - lname
+          - phone
+          - email
+          - blacklisted
+          - blacklist_comment
+          - role
+          - password
+          filter: {}
+        role: volunteer
+      - permission:
+          columns:
+          - blacklist_comment
+          - blacklisted
+          - password
+          filter: {}
+        role: voyeur
       table:
         name: volunteer
         schema: public
+      update_permissions:
+      - permission:
+          columns:
+          - uid
+          - fname
+          - mname
+          - lname
+          - phone
+          - email
+          - blacklisted
+          - blacklist_comment
+          - role
+          - password
+          filter:
+            uid:
+              _eq: X-Hasura-User-Id
+        role: volunteer
     - object_relationships:
-      - name: shift
-        using:
-          foreign_key_constraint_on: shift_id
       - name: volunteer
         using:
           foreign_key_constraint_on: volunteer_id
+      select_permissions:
+      - permission:
+          columns:
+          - start
+          - end
+          - date
+          - volunteer_id
+          - confirmed
+          - uid
+          filter: {}
+        role: voyeur
       table:
         name: volunteer_shift
-        schema: public
-    - table:
-        name: volunteer_shifts_view
         schema: public
     version: 2
   type: replace_metadata
