@@ -25,14 +25,61 @@
       - permission:
           columns:
           - uid
+          - name
+          - shortname
+          - phone
+          - address
+          filter: {}
+        role: volunteer
+      - permission:
+          columns:
+          - uid
           - address
           - name
-          - number
+          - phone
           - shortname
           filter: {}
         role: voyeur
       table:
         name: hospital
+        schema: public
+    - object_relationships:
+      - name: managedHospital
+        using:
+          manual_configuration:
+            column_mapping:
+              phone: phone
+            remote_table:
+              name: hospital
+              schema: public
+      select_permissions:
+      - permission:
+          columns:
+          - email
+          - fname
+          - lname
+          - mname
+          - password
+          - phone
+          - role
+          - uid
+          filter:
+            uid:
+              _eq: X-Hasura-User-Id
+        role: volunteer
+      - permission:
+          columns:
+          - fname
+          - lname
+          - mname
+          - phone
+          - role
+          - uid
+          filter: {}
+          limit: 0
+        role: voyeur
+      table:
+        name: me
         schema: public
     - object_relationships:
       - name: hospital
@@ -41,10 +88,18 @@
       select_permissions:
       - permission:
           columns:
-          - start
+          - demand
           - end
-          - needs
+          - start
           - hospital_id
+          filter: {}
+        role: volunteer
+      - permission:
+          columns:
+          - end
+          - hospital_id
+          - demand
+          - start
           filter: {}
         role: voyeur
       table:
@@ -104,9 +159,11 @@
         role: volunteer
       - permission:
           columns:
-          - blacklist_comment
-          - blacklisted
-          - password
+          - fname
+          - lname
+          - mname
+          - role
+          - uid
           filter: {}
         role: voyeur
       table:

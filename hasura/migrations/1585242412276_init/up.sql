@@ -2,14 +2,38 @@ CREATE TABLE public.hospital (
     uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
     name character varying NOT NULL,
     shortname character varying NOT NULL,
-    number character varying NOT NULL,
+    phone character varying NOT NULL,
     address character varying NOT NULL
 );
+CREATE TABLE public.volunteer (
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    fname character varying NOT NULL,
+    mname character varying NOT NULL,
+    lname character varying NOT NULL,
+    phone character varying NOT NULL,
+    email character varying NOT NULL,
+    blacklisted boolean DEFAULT false NOT NULL,
+    blacklist_comment text NOT NULL,
+    role character varying NOT NULL,
+    password character varying DEFAULT ''::character varying NOT NULL
+);
+CREATE VIEW public.me AS
+ SELECT volunteer.uid,
+    volunteer.fname,
+    volunteer.mname,
+    volunteer.lname,
+    volunteer.phone,
+    volunteer.email,
+    volunteer.blacklisted,
+    volunteer.blacklist_comment,
+    volunteer.role,
+    volunteer.password
+   FROM public.volunteer;
 CREATE TABLE public.period (
     start time with time zone NOT NULL,
     "end" time with time zone NOT NULL,
-    needs jsonb NOT NULL,
-    hospital_id uuid NOT NULL
+    hospital_id uuid NOT NULL,
+    demand integer NOT NULL
 );
 CREATE TABLE public.profession (
     name text NOT NULL
@@ -23,18 +47,6 @@ CREATE TABLE public.special_shift (
     needs jsonb NOT NULL,
     date date NOT NULL,
     hospital_id uuid NOT NULL
-);
-CREATE TABLE public.volunteer (
-    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
-    fname character varying NOT NULL,
-    mname character varying NOT NULL,
-    lname character varying NOT NULL,
-    phone character varying NOT NULL,
-    email character varying NOT NULL,
-    blacklisted boolean DEFAULT false NOT NULL,
-    blacklist_comment text NOT NULL,
-    role character varying NOT NULL,
-    password character varying DEFAULT ''::character varying NOT NULL
 );
 CREATE TABLE public.volunteer_shift (
     start time with time zone NOT NULL,
