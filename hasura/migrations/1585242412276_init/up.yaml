@@ -256,6 +256,27 @@
             remote_table:
               name: volunteer_shift
               schema: public
+      select_permissions:
+      - permission:
+          columns:
+          - meh
+          - demand
+          - hospitalscount
+          - placesavailable
+          - end
+          - start
+          filter: {}
+        role: volunteer
+      - permission:
+          columns:
+          - meh
+          - demand
+          - hospitalscount
+          - placesavailable
+          - end
+          - start
+          filter: {}
+        role: voyeur
       table:
         name: shifts
         schema: public
@@ -266,11 +287,11 @@
       select_permissions:
       - permission:
           columns:
-          - start
-          - end
-          - needs
           - date
+          - demand
+          - end
           - hospital_id
+          - start
           filter: {}
         role: voyeur
       table:
@@ -340,9 +361,38 @@
               _eq: X-Hasura-User-Id
         role: volunteer
     - object_relationships:
+      - name: hospital
+        using:
+          manual_configuration:
+            column_mapping:
+              hospital_id: uid
+            remote_table:
+              name: hospital
+              schema: public
       - name: volunteer
         using:
           foreign_key_constraint_on: volunteer_id
+      select_permissions:
+      - permission:
+          columns:
+          - start
+          - end
+          - date
+          - volunteer_id
+          - confirmed
+          - uid
+          filter: {}
+        role: volunteer
+      - permission:
+          columns:
+          - confirmed
+          - date
+          - end
+          - start
+          - uid
+          - volunteer_id
+          filter: {}
+        role: voyeur
       table:
         name: volunteer_shift
         schema: public

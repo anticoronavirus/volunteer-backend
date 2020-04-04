@@ -87,7 +87,8 @@ CREATE TABLE public.volunteer_shift (
     date date NOT NULL,
     volunteer_id uuid NOT NULL,
     confirmed boolean NOT NULL,
-    uid uuid DEFAULT public.gen_random_uuid() NOT NULL
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    hospital_id uuid NOT NULL
 );
 CREATE VIEW public.shifts AS
  SELECT (days.days)::date AS meh,
@@ -103,9 +104,10 @@ CREATE VIEW public.shifts AS
 CREATE TABLE public.special_shift (
     start time with time zone NOT NULL,
     "end" time with time zone NOT NULL,
-    needs jsonb NOT NULL,
     date date NOT NULL,
-    hospital_id uuid NOT NULL
+    hospital_id uuid NOT NULL,
+    demand integer NOT NULL,
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL
 );
 ALTER TABLE ONLY public.hint
     ADD CONSTRAINT hint_pkey PRIMARY KEY (name);
