@@ -6,7 +6,62 @@
         url: http://auth:8000/
       name: auth
     tables:
+    - select_permissions:
+      - permission:
+          columns:
+          - coophone
+          - uid
+          - name
+          - shortname
+          - phone
+          - address
+          filter: {}
+        role: volunteer
+      table:
+        name: coordinator_hospitals_view
+        schema: public
     - array_relationships:
+      - name: seen_hints
+        using:
+          foreign_key_constraint_on:
+            column: hint_id
+            table:
+              name: seen_hint
+              schema: public
+      select_permissions:
+      - permission:
+          columns:
+          - uid
+          - text
+          - name
+          filter:
+            _not:
+              _exists:
+                _table:
+                  name: seen_hint
+                  schema: public
+                _where:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+        role: volunteer
+      table:
+        name: hint
+        schema: public
+    - array_relationships:
+      - name: coordinators
+        using:
+          foreign_key_constraint_on:
+            column: hospital_id
+            table:
+              name: volunteer
+              schema: public
+      - name: hospital_coordinators
+        using:
+          foreign_key_constraint_on:
+            column: hospital_id
+            table:
+              name: hospital_coordinator
+              schema: public
       - name: periods
         using:
           foreign_key_constraint_on:
@@ -52,12 +107,34 @@
       table:
         name: hospital
         schema: public
+    - configuration:
+        custom_column_names:
+          coophone: coophone
+        custom_root_fields: {}
+      object_relationships:
+      - name: hospital
+        using:
+          foreign_key_constraint_on: hospital_id
+      table:
+        name: hospital_coordinator
+        schema: public
+    - table:
+        name: hospital_coordinators_view
+        schema: public
     - object_relationships:
       - name: managedHospital
         using:
           manual_configuration:
             column_mapping:
-              phone: phone
+              phone: coophone
+            remote_table:
+              name: coordinator_hospitals_view
+              schema: public
+      - name: managedHospital_old
+        using:
+          manual_configuration:
+            column_mapping:
+              hospital_id: uid
             remote_table:
               name: hospital
               schema: public
@@ -149,6 +226,39 @@
     - table:
         name: role
         schema: public
+    - insert_permissions:
+      - permission:
+          check:
+            user_id:
+              _eq: X-Hasura-User-Id
+          columns:
+          - hint_id
+          - user_id
+        role: volunteer
+      object_relationships:
+      - name: hint
+        using:
+          foreign_key_constraint_on: hint_id
+      - name: volunteer
+        using:
+          foreign_key_constraint_on: user_id
+      table:
+        name: seen_hint
+        schema: public
+    - array_relationships:
+      - name: shiftRequests
+        using:
+          manual_configuration:
+            column_mapping:
+              end: end
+              meh: date
+              start: start
+            remote_table:
+              name: volunteer_shift
+              schema: public
+      table:
+        name: shifts
+        schema: public
     - object_relationships:
       - name: hospital
         using:
@@ -167,6 +277,13 @@
         name: special_shift
         schema: public
     - array_relationships:
+      - name: seen_hints
+        using:
+          foreign_key_constraint_on:
+            column: user_id
+            table:
+              name: seen_hint
+              schema: public
       - name: volunteer_shifts
         using:
           foreign_key_constraint_on:
@@ -174,6 +291,10 @@
             table:
               name: volunteer_shift
               schema: public
+      object_relationships:
+      - name: hospital
+        using:
+          foreign_key_constraint_on: hospital_id
       select_permissions:
       - permission:
           columns:
@@ -222,17 +343,6 @@
       - name: volunteer
         using:
           foreign_key_constraint_on: volunteer_id
-      select_permissions:
-      - permission:
-          columns:
-          - start
-          - end
-          - date
-          - volunteer_id
-          - confirmed
-          - uid
-          filter: {}
-        role: voyeur
       table:
         name: volunteer_shift
         schema: public
