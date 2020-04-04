@@ -21,6 +21,15 @@
             table:
               name: special_shift
               schema: public
+      object_relationships:
+      - name: coordinator
+        using:
+          manual_configuration:
+            column_mapping:
+              phone: phone
+            remote_table:
+              name: volunteer
+              schema: public
       select_permissions:
       - permission:
           columns:
@@ -81,7 +90,28 @@
       table:
         name: me
         schema: public
-    - object_relationships:
+    - delete_permissions:
+      - permission:
+          filter:
+            hospital:
+              coordinator:
+                uid:
+                  _eq: X-Hasura-User-Id
+        role: volunteer
+      insert_permissions:
+      - permission:
+          check:
+            hospital:
+              coordinator:
+                uid:
+                  _eq: X-Hasura-User-Id
+          columns:
+          - demand
+          - end
+          - start
+          - hospital_id
+        role: volunteer
+      object_relationships:
       - name: hospital
         using:
           foreign_key_constraint_on: hospital_id
@@ -90,16 +120,18 @@
           columns:
           - demand
           - end
-          - start
           - hospital_id
+          - start
+          - uid
           filter: {}
         role: volunteer
       - permission:
           columns:
+          - demand
           - end
           - hospital_id
-          - demand
           - start
+          - uid
           filter: {}
         role: voyeur
       table:

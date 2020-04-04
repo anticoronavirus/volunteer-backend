@@ -33,7 +33,8 @@ CREATE TABLE public.period (
     start time with time zone NOT NULL,
     "end" time with time zone NOT NULL,
     hospital_id uuid NOT NULL,
-    demand integer NOT NULL
+    demand integer NOT NULL,
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL
 );
 CREATE TABLE public.profession (
     name text NOT NULL
@@ -57,9 +58,17 @@ CREATE TABLE public.volunteer_shift (
     uid uuid NOT NULL
 );
 ALTER TABLE ONLY public.hospital
+    ADD CONSTRAINT hospital_address_key UNIQUE (address);
+ALTER TABLE ONLY public.hospital
+    ADD CONSTRAINT hospital_name_key UNIQUE (name);
+ALTER TABLE ONLY public.hospital
+    ADD CONSTRAINT hospital_phone_key UNIQUE (phone);
+ALTER TABLE ONLY public.hospital
     ADD CONSTRAINT hospital_pkey PRIMARY KEY (uid);
+ALTER TABLE ONLY public.hospital
+    ADD CONSTRAINT hospital_uid_key UNIQUE (uid);
 ALTER TABLE ONLY public.period
-    ADD CONSTRAINT period_pkey PRIMARY KEY (start, "end");
+    ADD CONSTRAINT period_pkey PRIMARY KEY (uid);
 ALTER TABLE ONLY public.profession
     ADD CONSTRAINT profession_name_key UNIQUE (name);
 ALTER TABLE ONLY public.profession
