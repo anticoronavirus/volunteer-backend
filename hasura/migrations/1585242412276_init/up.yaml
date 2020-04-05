@@ -3,6 +3,14 @@
     - function:
         name: shift_selector
         schema: public
+    - function:
+        name: shift_selector2
+        schema: public
+    - configuration:
+        session_argument: hasura_session
+      function:
+        name: unseen_hint
+        schema: public
     remote_schemas:
     - definition:
         forward_client_headers: true
@@ -10,6 +18,31 @@
         url: http://auth:8000/
       name: auth
     tables:
+    - object_relationships:
+      - name: volunteer
+        using:
+          foreign_key_constraint_on: volunteer_id
+      select_permissions:
+      - permission:
+          columns:
+          - comment
+          - created_at
+          - updated_at
+          - uid
+          - volunteer_id
+          filter:
+            _exists:
+              _table:
+                name: hospital
+                schema: public
+              _where:
+                coordinators:
+                  uid:
+                    _eq: X-Hasura-User-Id
+        role: volunteer
+      table:
+        name: blacklist
+        schema: public
     - select_permissions:
       - permission:
           columns:
@@ -50,13 +83,9 @@
           - name
           filter:
             _not:
-              _exists:
-                _table:
-                  name: seen_hint
-                  schema: public
-                _where:
-                  user_id:
-                    _eq: X-Hasura-User-Id
+              seen_hints:
+                user_id:
+                  _eq: X-Hasura-User-Id
         role: volunteer
       table:
         name: hint
@@ -132,9 +161,6 @@
       table:
         name: hospital_coordinator
         schema: public
-    - table:
-        name: hospital_coordinators_view
-        schema: public
     - object_relationships:
       - name: managedHospital
         using:
@@ -144,40 +170,25 @@
             remote_table:
               name: coordinator_hospitals_view
               schema: public
-      - name: managedHospital_old
-        using:
-          manual_configuration:
-            column_mapping:
-              hospital_id: uid
-            remote_table:
-              name: hospital
-              schema: public
       select_permissions:
       - permission:
           columns:
-          - email
-          - fname
-          - lname
-          - mname
-          - password
-          - phone
-          - role
           - uid
+          - fname
+          - mname
+          - lname
+          - phone
+          - email
+          - role
+          - password
+          - hospital_id
+          - comment
+          - created_at
+          - updated_at
           filter:
             uid:
               _eq: X-Hasura-User-Id
         role: volunteer
-      - permission:
-          columns:
-          - fname
-          - lname
-          - mname
-          - phone
-          - role
-          - uid
-          filter: {}
-          limit: 0
-        role: voyeur
       table:
         name: me
         schema: public
@@ -312,6 +323,13 @@
         name: special_shift
         schema: public
     - array_relationships:
+      - name: blacklists
+        using:
+          foreign_key_constraint_on:
+            column: volunteer_id
+            table:
+              name: blacklist
+              schema: public
       - name: seen_hints
         using:
           foreign_key_constraint_on:
@@ -341,17 +359,24 @@
       select_permissions:
       - permission:
           columns:
-          - uid
-          - fname
-          - mname
-          - lname
-          - phone
           - email
-          - blacklisted
-          - blacklist_comment
-          - role
+          - fname
+          - hospital_id
+          - lname
+          - mname
           - password
-          filter: {}
+          - phone
+          - role
+          - uid
+          filter:
+            _or:
+            - uid:
+                _eq: X-Hasura-User-Id
+            - volunteer_shifts:
+                hospital:
+                  coordinators:
+                    uid:
+                      _eq: X-Hasura-User-Id
         role: volunteer
       - permission:
           columns:
@@ -368,16 +393,14 @@
       update_permissions:
       - permission:
           columns:
-          - uid
-          - fname
-          - mname
-          - lname
-          - phone
           - email
-          - blacklisted
-          - blacklist_comment
-          - role
+          - fname
+          - lname
+          - mname
           - password
+          - phone
+          - role
+          - uid
           filter:
             uid:
               _eq: X-Hasura-User-Id
@@ -385,19 +408,31 @@
     - delete_permissions:
       - permission:
           filter:
-            volunteer_id:
-              _eq: X-Hasura-User-Id
+            _or:
+            - volunteer_id:
+                _eq: X-Hasura-User-Id
+            - hospital:
+                coordinators:
+                  uid:
+                    _eq: X-Hasura-User-Id
         role: volunteer
       insert_permissions:
       - permission:
           check:
-            volunteer_id:
-              _eq: X-Hasura-User-Id
+            _or:
+            - volunteer_id:
+                _eq: X-Hasura-User-Id
+            - hospital:
+                coordinators:
+                  uid:
+                    _eq: X-Hasura-User-Id
           columns:
+          - confirmed
           - date
           - end
-          - hospital_id
           - start
+          - hospital_id
+          - uid
           - volunteer_id
         role: volunteer
       object_relationships:
@@ -418,13 +453,18 @@
           - confirmed
           - date
           - end
-          - hospital_id
           - start
+          - hospital_id
           - uid
           - volunteer_id
           filter:
-            volunteer_id:
-              _eq: X-Hasura-User-Id
+            _or:
+            - volunteer_id:
+                _eq: X-Hasura-User-Id
+            - hospital:
+                coordinators:
+                  uid:
+                    _eq: X-Hasura-User-Id
         role: volunteer
       - permission:
           columns:
