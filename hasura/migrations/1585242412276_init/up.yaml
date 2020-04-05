@@ -1,4 +1,8 @@
 - args:
+    functions:
+    - function:
+        name: shift_selector
+        schema: public
     remote_schemas:
     - definition:
         forward_client_headers: true
@@ -17,6 +21,16 @@
           - address
           filter: {}
         role: volunteer
+      - permission:
+          columns:
+          - coophone
+          - uid
+          - name
+          - shortname
+          - phone
+          - address
+          filter: {}
+        role: voyeur
       table:
         name: coordinator_hospitals_view
         schema: public
@@ -171,7 +185,7 @@
       - permission:
           filter:
             hospital:
-              coordinator:
+              coordinators:
                 uid:
                   _eq: X-Hasura-User-Id
         role: volunteer
@@ -179,7 +193,7 @@
       - permission:
           check:
             hospital:
-              coordinator:
+              coordinators:
                 uid:
                   _eq: X-Hasura-User-Id
           columns:
@@ -250,8 +264,8 @@
         using:
           manual_configuration:
             column_mapping:
+              date: date
               end: end
-              meh: date
               start: start
             remote_table:
               name: volunteer_shift
@@ -259,17 +273,17 @@
       select_permissions:
       - permission:
           columns:
-          - meh
-          - demand
-          - hospitalscount
-          - placesavailable
-          - end
+          - date
           - start
+          - end
+          - hospitalscount
+          - demand
+          - placesavailable
           filter: {}
         role: volunteer
       - permission:
           columns:
-          - meh
+          - date
           - demand
           - hospitalscount
           - placesavailable
@@ -316,6 +330,14 @@
       - name: hospital
         using:
           foreign_key_constraint_on: hospital_id
+      - name: managedHospital
+        using:
+          manual_configuration:
+            column_mapping:
+              phone: coophone
+            remote_table:
+              name: coordinator_hospitals_view
+              schema: public
       select_permissions:
       - permission:
           columns:
@@ -360,7 +382,25 @@
             uid:
               _eq: X-Hasura-User-Id
         role: volunteer
-    - object_relationships:
+    - delete_permissions:
+      - permission:
+          filter:
+            volunteer_id:
+              _eq: X-Hasura-User-Id
+        role: volunteer
+      insert_permissions:
+      - permission:
+          check:
+            volunteer_id:
+              _eq: X-Hasura-User-Id
+          columns:
+          - date
+          - end
+          - hospital_id
+          - start
+          - volunteer_id
+        role: volunteer
+      object_relationships:
       - name: hospital
         using:
           manual_configuration:
@@ -375,26 +415,79 @@
       select_permissions:
       - permission:
           columns:
-          - start
-          - end
-          - date
-          - volunteer_id
           - confirmed
+          - date
+          - end
+          - hospital_id
+          - start
           - uid
-          filter: {}
+          - volunteer_id
+          filter:
+            volunteer_id:
+              _eq: X-Hasura-User-Id
         role: volunteer
       - permission:
           columns:
           - confirmed
           - date
           - end
+          - hospital_id
           - start
           - uid
           - volunteer_id
-          filter: {}
+          filter:
+            volunteer_id:
+              _eq: X-Hasura-User-Id
         role: voyeur
       table:
         name: volunteer_shift
+        schema: public
+      update_permissions:
+      - permission:
+          columns:
+          - confirmed
+          filter:
+            hospital:
+              coordinators:
+                uid:
+                  _eq: X-Hasura-User-Id
+        role: volunteer
+    - array_relationships:
+      - name: shiftRequests
+        using:
+          manual_configuration:
+            column_mapping:
+              date: date
+              end: end
+              start: start
+            remote_table:
+              name: volunteer_shift
+              schema: public
+      select_permissions:
+      - permission:
+          columns:
+          - date
+          - start
+          - end
+          - hospitalscount
+          - demand
+          - placesavailable
+          - uid
+          filter: {}
+        role: volunteer
+      - permission:
+          columns:
+          - date
+          - demand
+          - hospitalscount
+          - placesavailable
+          - end
+          - start
+          - uid
+          filter: {}
+        role: voyeur
+      table:
+        name: vshift
         schema: public
     version: 2
   type: replace_metadata

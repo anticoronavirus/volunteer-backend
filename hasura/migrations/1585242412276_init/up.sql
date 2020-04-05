@@ -1,3 +1,34 @@
+CREATE TABLE public.vshift (
+    date date NOT NULL,
+    start time with time zone NOT NULL,
+    "end" time with time zone NOT NULL,
+    hospitalscount integer NOT NULL,
+    demand integer NOT NULL,
+    placesavailable integer NOT NULL,
+    uid uuid NOT NULL
+);
+CREATE FUNCTION public.shift_selector(hospital_ids uuid[] DEFAULT NULL::uuid[]) RETURNS SETOF public.vshift
+    LANGUAGE sql STABLE
+    AS $$ 
+SELECT (days.date)::date AS date,
+    period.start,
+    period."end",
+    count(DISTINCT period.hospital_id)::integer AS hospitalscount,
+    sum(period.demand)::integer AS demand,
+    (((sum(period.demand))::numeric - COALESCE(sum(vs_stat.subs), (0)::numeric)))::integer AS placesavailable,
+    gen_random_uuid() as uid
+   FROM ((period
+     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(date) ON (true))
+     LEFT JOIN ( SELECT volunteer_shift.date,
+            volunteer_shift.start,
+            volunteer_shift."end",
+            count(volunteer_shift.uid) AS subs,
+            hospital_id
+           FROM volunteer_shift
+          GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND vs_stat.hospital_id = period.hospital_id)))
+  WHERE CASE WHEN hospital_ids IS NULL THEN TRUE ELSE period.hospital_id = ANY(hospital_ids) END 
+  GROUP BY ((days.date)::date), period.start, period."end";
+  $$;
 CREATE TABLE public.hospital (
     uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
     name character varying NOT NULL,
@@ -86,21 +117,27 @@ CREATE TABLE public.volunteer_shift (
     "end" time with time zone NOT NULL,
     date date NOT NULL,
     volunteer_id uuid NOT NULL,
-    confirmed boolean NOT NULL,
+    confirmed boolean DEFAULT false NOT NULL,
     uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
     hospital_id uuid NOT NULL
 );
 CREATE VIEW public.shifts AS
- SELECT (days.days)::date AS meh,
+ SELECT (days.date)::date AS date,
     period.start,
     period."end",
     count(DISTINCT period.hospital_id) AS hospitalscount,
     sum(period.demand) AS demand,
-    (sum(period.demand) - count(DISTINCT volunteer_shift.uid)) AS placesavailable
+    (((sum(period.demand))::numeric - COALESCE(sum(vs_stat.subs), (0)::numeric)))::bigint AS placesavailable
    FROM ((public.period
-     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(days) ON (true))
-     LEFT JOIN public.volunteer_shift ON (((volunteer_shift.date = days.days) AND (volunteer_shift.start = period.start) AND (volunteer_shift."end" = period."end"))))
-  GROUP BY ((days.days)::date), period.start, period."end";
+     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(date) ON (true))
+     LEFT JOIN ( SELECT volunteer_shift.date,
+            volunteer_shift.start,
+            volunteer_shift."end",
+            count(volunteer_shift.uid) AS subs,
+            volunteer_shift.hospital_id
+           FROM public.volunteer_shift
+          GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND (vs_stat.hospital_id = period.hospital_id))))
+  GROUP BY ((days.date)::date), period.start, period."end";
 CREATE TABLE public.special_shift (
     start time with time zone NOT NULL,
     "end" time with time zone NOT NULL,
@@ -153,6 +190,8 @@ ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_start_date_end_volunteer_id_key UNIQUE (start, date, "end", volunteer_id);
 ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_uid_key UNIQUE (uid);
+ALTER TABLE ONLY public.vshift
+    ADD CONSTRAINT vshift_pkey PRIMARY KEY (uid);
 ALTER TABLE ONLY public.hospital_coordinator
     ADD CONSTRAINT hospital_coordinator_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE ONLY public.period
