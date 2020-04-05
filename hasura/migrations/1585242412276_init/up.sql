@@ -1,3 +1,15 @@
+CREATE FUNCTION public.drop_shifts_for() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+begin
+delete from volunteer_shift where volunteer_id = NEW.volunteer_id;
+end;
+$$;
+CREATE FUNCTION public.drop_shifts_for(vuid uuid) RETURNS void
+    LANGUAGE sql STABLE
+    AS $$
+delete from volunteer_shift where volunteer_id = vuid;
+$$;
 CREATE FUNCTION public.set_current_timestamp_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -239,6 +251,7 @@ ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_uid_key UNIQUE (uid);
 ALTER TABLE ONLY public.vshift
     ADD CONSTRAINT vshift_pkey PRIMARY KEY (uid);
+CREATE TRIGGER drop_shift_for_newly_blacklisted AFTER INSERT ON public.blacklist FOR EACH STATEMENT EXECUTE FUNCTION public.drop_shifts_for();
 CREATE TRIGGER set_public_blacklist_updated_at BEFORE UPDATE ON public.blacklist FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_blacklist_updated_at ON public.blacklist IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 CREATE TRIGGER set_public_hospital_coordinator_updated_at BEFORE UPDATE ON public.hospital_coordinator FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();

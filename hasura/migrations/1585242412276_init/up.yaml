@@ -18,7 +18,22 @@
         url: http://auth:8000/
       name: auth
     tables:
-    - object_relationships:
+    - insert_permissions:
+      - permission:
+          check:
+            _exists:
+              _table:
+                name: hospital
+                schema: public
+              _where:
+                coordinators:
+                  uid:
+                    _eq: X-Hasura-User-Id
+          columns:
+          - comment
+          - volunteer_id
+        role: volunteer
+      object_relationships:
       - name: volunteer
         using:
           foreign_key_constraint_on: volunteer_id
@@ -189,6 +204,24 @@
             uid:
               _eq: X-Hasura-User-Id
         role: volunteer
+      - permission:
+          columns:
+          - created_at
+          - updated_at
+          - hospital_id
+          - uid
+          - comment
+          - email
+          - fname
+          - lname
+          - mname
+          - password
+          - phone
+          - role
+          filter:
+            uid:
+              _is_null: true
+        role: voyeur
       table:
         name: me
         schema: public
@@ -419,13 +452,22 @@
       insert_permissions:
       - permission:
           check:
-            _or:
-            - volunteer_id:
-                _eq: X-Hasura-User-Id
-            - hospital:
-                coordinators:
-                  uid:
-                    _eq: X-Hasura-User-Id
+            _and:
+            - _or:
+              - volunteer_id:
+                  _eq: X-Hasura-User-Id
+              - hospital:
+                  coordinators:
+                    uid:
+                      _eq: X-Hasura-User-Id
+            - _not:
+                _exists:
+                  _table:
+                    name: blacklist
+                    schema: public
+                  _where:
+                    volunteer_id:
+                      _eq: X-Hasura-User-Id
           columns:
           - confirmed
           - date
