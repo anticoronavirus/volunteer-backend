@@ -282,3 +282,5 @@ ALTER TABLE ONLY public.volunteer
     ADD CONSTRAINT volunteer_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE SET NULL ON DELETE SET NULL;
 ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_volunteer_id_fkey FOREIGN KEY (volunteer_id) REFERENCES public.volunteer(uid) ON UPDATE CASCADE ON DELETE CASCADE;
+INSERT INTO public.hint (name, text) VALUES ('welcome', 'Спасибо за то, что готовы помочь! Нажмите на свободную смену ниже, чтобы записаться, а мы позвоним накануне и напомним.         Двойная галочка означет подтверждение смены. Если вы не уверены, не ставьте галочку, потому что другие не смогут записаться на это время.');
+INSERT INTO public.hint (name, text) VALUES ('how_confirm', 'Нажмите на аватарку волонтёра чтобы подтвердить присутствие');
