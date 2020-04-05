@@ -392,6 +392,7 @@
       select_permissions:
       - permission:
           columns:
+          - comment
           - email
           - fname
           - hospital_id
@@ -426,6 +427,7 @@
       update_permissions:
       - permission:
           columns:
+          - comment
           - email
           - fname
           - lname
