@@ -16,6 +16,7 @@ services:
       - "--certificatesresolvers.main.acme.email=esseswann@gmail.com"
       - "--certificatesresolvers.main.acme.storage=/config/acme.json"
     ports:
+      - "1234:8080"
       - "80:80"
       - "127.0.0.1:8080:8080"
       - "443:443"
@@ -30,53 +31,64 @@ services:
   frontend:
     image: docker.pkg.github.com/anticoronavirus/volunteer-frontend/volunteer-frontend:master
     restart: always
-    ports:
-      - 1486:80
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect.redirectscheme.permanent=true"
       - "traefik.http.routers.frontend.middlewares=redirect@docker"
-      - "traefik.http.routers.frontend.rule=(Host(`memedic.ru`) && PathPrefix(`/`))"
+      - "traefik.http.routers.frontend.rule=(Host(`${HOST}`) && PathPrefix(`/`))"
       - "traefik.http.routers.frontend.entrypoints=http"
-      - "traefik.http.routers.frontend-secure.rule=(Host(`memedic.ru`) && PathPrefix(`/`))"
+      - "traefik.http.routers.frontend-secure.rule=(Host(`${HOST}`) && PathPrefix(`/`))"
       - "traefik.http.routers.frontend-secure.entrypoints=https"
       - "traefik.http.routers.frontend-secure.tls=true"
       - "traefik.http.routers.frontend-secure.tls.certresolver=main"
+
   postgres:
     image: postgres:12
     restart: always
     volumes:
     - db_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
 
   graphql-engine:
     image: hasura/graphql-engine:v1.1.0
-    ports:
-    - "8080:8080"
     depends_on:
     - "postgres"
+    expose:
+    - "8080"
     restart: always
-    ports:
-      - "1488:8080"
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect.redirectscheme.permanent=true"
       - "traefik.http.routers.graphql-engine.middlewares=redirect@docker"
-      - "traefik.http.routers.graphql-engine.rule=(Host(`memedic.ru`) && PathPrefix(`/v1`)) || (Host(`memedic.ru`) && PathPrefix(`/console`))"
+      - "traefik.http.routers.graphql-engine.rule=(Host(`${HOST}`) && PathPrefix(`/v1`)) || (Host(`${HOST}`) && PathPrefix(`/console`))"
       - "traefik.http.routers.graphql-engine.entrypoints=http"
-      - "traefik.http.routers.graphql-engine-secure.rule=(Host(`memedic.ru`) && PathPrefix(`/v1`)) || (Host(`memedic.ru`) && PathPrefix(`/console`))"
+      - "traefik.http.routers.graphql-engine-secure.rule=(Host(`${HOST}`) && PathPrefix(`/v1`)) || (Host(`${HOST}`) && PathPrefix(`/console`))"
       - "traefik.http.routers.graphql-engine-secure.entrypoints=https"
       - "traefik.http.routers.graphql-engine-secure.tls=true"
       - "traefik.http.routers.graphql-engine-secure.tls.certresolver=main"
     environment:
-      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:${DATABASE_PASSWORD}@postgres:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      ## uncomment next line to set an admin secret
-      # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      HASURA_GRAPHQL_JWT_SECRET: ${JWT_SECRET}
+      HASURA_GRAPHQL_ADMIN_SECRET: ${ADMIN_SECRET}
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "voyeur"
+
+  auth:
+    image: docker.pkg.github.com/anticoronavirus/volunteer-auth/volunteer-auth:master
+    depends_on:
+    - "postgres"
+    restart: always
+    expose:
+    - "8000"
+    environment:
+      AERO_LOGIN: ${AERO_LOGIN}
+      AERO_TOKEN: ${AERO_TOKEN}
+      JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: "postgresql://postgres:${DATABASE_PASSWORD}@postgres:5432/postgres"
 
 volumes:
   db_data:

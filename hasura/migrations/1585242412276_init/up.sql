@@ -1,119 +1,310 @@
-CREATE FUNCTION public.add_shift_professions(shift_id uuid, num integer) RETURNS integer
+CREATE FUNCTION public.drop_shifts_for() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
-  DECLARE
-    prof RECORD;
-  BEGIN
-    FOR prof IN SELECT name FROM profession LOOP
-      INSERT INTO shift_profession("shift_id", "profession", number)
-      VALUES (shift_id, prof.name, num);
-    END LOOP;
-    RETURN 1;
-  END;
+begin
+delete from volunteer_shift where volunteer_id = NEW.volunteer_id;
+RETURN NEW;
+end;
 $$;
-CREATE FUNCTION public.generate_shifts(start date DEFAULT CURRENT_DATE, end_ date DEFAULT CURRENT_DATE) RETURNS integer
+CREATE FUNCTION public.drop_shifts_for(vuid uuid) RETURNS void
+    LANGUAGE sql STABLE
+    AS $$
+delete from volunteer_shift where volunteer_id = vuid;
+$$;
+CREATE FUNCTION public.set_current_timestamp_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
-  DECLARE
-    iter date := start;
-    suid UUID;
-  BEGIN
-    WHILE iter <= end_ LOOP
-      INSERT INTO shift(start, "end", date)
-      VALUES ('08:00', '14:00', iter) RETURNING uid INTO suid;
-      PERFORM add_shift_professions(suid, 20);
-      INSERT INTO shift(start, "end", date)
-      VALUES ('14:00', '20:00', iter) RETURNING uid INTO suid;
-      PERFORM add_shift_professions(suid, 20);
-      INSERT INTO shift(start, "end", date)
-      VALUES ('20:00', '08:00', iter) RETURNING uid INTO suid;
-      PERFORM add_shift_professions(suid, 3);
-      iter := iter + '1 day'::interval;
-    END LOOP;
-    RETURN 1;
-  END;
+DECLARE
+  _new record;
+BEGIN
+  _new := NEW;
+  _new."updated_at" = NOW();
+  RETURN _new;
+END;
 $$;
-CREATE TABLE public.profession (
-    name character varying NOT NULL
-);
-CREATE TABLE public.shift (
-    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+CREATE TABLE public.vshift (
+    date date NOT NULL,
     start time with time zone NOT NULL,
     "end" time with time zone NOT NULL,
-    date date NOT NULL
+    hospitalscount integer NOT NULL,
+    demand integer NOT NULL,
+    placesavailable integer NOT NULL,
+    uid uuid NOT NULL
 );
-CREATE TABLE public.shift_profession (
-    shift_id uuid NOT NULL,
-    profession character varying NOT NULL,
-    number integer NOT NULL
+CREATE FUNCTION public.shift_selector(_hospital_id uuid DEFAULT NULL::uuid) RETURNS SETOF public.vshift
+    LANGUAGE sql STABLE
+    AS $$ 
+SELECT (days.date)::date AS date,
+    period.start,
+    period."end",
+    count(DISTINCT period.hospital_id)::integer AS hospitalscount,
+    sum(period.demand)::integer AS demand,
+    (((sum(period.demand))::numeric - COALESCE(sum(vs_stat.subs), (0)::numeric)))::integer AS placesavailable,
+    gen_random_uuid() as uid
+   FROM ((period
+     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(date) ON (true))
+     LEFT JOIN ( SELECT volunteer_shift.date,
+            volunteer_shift.start,
+            volunteer_shift."end",
+            count(volunteer_shift.uid) AS subs,
+            hospital_id
+           FROM volunteer_shift
+          GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND vs_stat.hospital_id = period.hospital_id)))
+  WHERE CASE WHEN _hospital_id IS NULL THEN TRUE ELSE period.hospital_id = _hospital_id END 
+  GROUP BY ((days.date)::date), period.start, period."end"
+  ORDER BY date, period.start;
+  $$;
+CREATE FUNCTION public.shift_selector2(hospital_ids text[] DEFAULT NULL::text[]) RETURNS SETOF public.vshift
+    LANGUAGE sql STABLE
+    AS $$ 
+SELECT (days.date)::date AS date,
+    period.start,
+    period."end",
+    count(DISTINCT period.hospital_id)::integer AS hospitalscount,
+    sum(period.demand)::integer AS demand,
+    (((sum(period.demand))::numeric - COALESCE(sum(vs_stat.subs), (0)::numeric)))::integer AS placesavailable,
+    gen_random_uuid() as uid
+   FROM ((period
+     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(date) ON (true))
+     LEFT JOIN ( SELECT volunteer_shift.date,
+            volunteer_shift.start,
+            volunteer_shift."end",
+            count(volunteer_shift.uid) AS subs,
+            hospital_id
+           FROM volunteer_shift
+          GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND vs_stat.hospital_id = period.hospital_id)))
+  WHERE CASE WHEN hospital_ids IS NULL THEN TRUE ELSE period.hospital_id = ANY(hospital_ids::uuid[]) END 
+  GROUP BY ((days.date)::date), period.start, period."end"
+  ORDER BY date, period.start;
+  $$;
+CREATE TABLE public.hint (
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    text character varying NOT NULL,
+    name character varying NOT NULL
 );
-CREATE VIEW public.profession_shifts_view AS
- SELECT shift_profession.profession,
-    shift.uid,
-    shift.start,
-    shift."end",
-    shift.date
-   FROM (public.shift_profession
-     LEFT JOIN public.shift ON ((shift_profession.shift_id = shift.uid)));
-CREATE VIEW public.shift_professions_view AS
- SELECT shift_profession.shift_id,
-    profession.name,
-    shift_profession.number
-   FROM (public.shift_profession
-     LEFT JOIN public.profession ON (((shift_profession.profession)::text = (profession.name)::text)));
+CREATE FUNCTION public.unseen_hint(hasura_session json, name character) RETURNS SETOF public.hint
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT hint.* FROM hint; --left outer join seen_hint ON seen_hint.hint_id = hint.uid where hint.name = name AND seen_hint.user_id = (hasura_session ->> 'x-hasura-user-id')::uuid
+$$;
+CREATE TABLE public.blacklist (
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    volunteer_id uuid NOT NULL,
+    comment text NOT NULL
+);
+CREATE TABLE public.hospital (
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    shortname character varying NOT NULL,
+    phone character varying NOT NULL,
+    address character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE TABLE public.hospital_coordinator (
+    hospital_id uuid NOT NULL,
+    coophone text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE VIEW public.coordinator_hospitals_view AS
+ SELECT hospital_coordinator.coophone,
+    hospital.uid,
+    hospital.name,
+    hospital.shortname,
+    hospital.phone,
+    hospital.address
+   FROM (public.hospital_coordinator
+     LEFT JOIN public.hospital ON ((hospital_coordinator.hospital_id = hospital.uid)));
 CREATE TABLE public.volunteer (
     uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
-    fname character varying DEFAULT ''::character varying NOT NULL,
-    mname character varying DEFAULT ''::character varying NOT NULL,
-    lname character varying DEFAULT ''::character varying NOT NULL,
-    phone character varying DEFAULT ''::character varying NOT NULL,
-    email character varying DEFAULT ''::character varying NOT NULL,
-    profession character varying DEFAULT ''::character varying NOT NULL
+    fname character varying NOT NULL,
+    mname character varying NOT NULL,
+    lname character varying NOT NULL,
+    phone character varying NOT NULL,
+    email character varying NOT NULL,
+    role character varying NOT NULL,
+    password character varying DEFAULT ''::character varying NOT NULL,
+    hospital_id uuid,
+    comment character varying,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    is_hatching boolean DEFAULT true NOT NULL,
+    profession text DEFAULT 'студент'::text NOT NULL
 );
-CREATE TABLE public.volunteer_shift (
-    volunteer_id uuid NOT NULL,
-    shift_id uuid NOT NULL,
-    confirmed boolean DEFAULT false NOT NULL
-);
-CREATE VIEW public.shift_volunteers_view AS
- SELECT volunteer_shift.shift_id,
+CREATE VIEW public.hospital_coordinators_view AS
+ SELECT hospital_coordinator.hospital_id,
     volunteer.uid,
     volunteer.fname,
     volunteer.mname,
     volunteer.lname,
     volunteer.phone,
+    volunteer.email,
+    volunteer.role,
+    volunteer.password,
+    volunteer.comment,
+    volunteer.created_at,
+    volunteer.updated_at
+   FROM (public.hospital_coordinator
+     LEFT JOIN public.volunteer ON ((hospital_coordinator.coophone = (volunteer.phone)::text)));
+CREATE VIEW public.me AS
+ SELECT volunteer.uid,
+    volunteer.fname,
+    volunteer.mname,
+    volunteer.lname,
+    volunteer.phone,
+    volunteer.email,
+    volunteer.role,
+    volunteer.password,
+    volunteer.hospital_id,
+    volunteer.comment,
+    volunteer.created_at,
+    volunteer.updated_at,
+    volunteer.is_hatching,
     volunteer.profession
-   FROM (public.volunteer_shift
-     LEFT JOIN public.volunteer ON ((volunteer_shift.volunteer_id = volunteer.uid)));
-CREATE VIEW public.volunteer_shifts_view AS
- SELECT volunteer_shift.volunteer_id,
-    shift.uid,
-    shift.start,
-    shift."end",
-    shift.date
-   FROM (public.volunteer_shift
-     LEFT JOIN public.shift ON ((volunteer_shift.shift_id = shift.uid)));
+   FROM public.volunteer;
+CREATE TABLE public.period (
+    start time with time zone NOT NULL,
+    "end" time with time zone NOT NULL,
+    hospital_id uuid NOT NULL,
+    demand integer NOT NULL,
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE TABLE public.profession (
+    name text NOT NULL
+);
+CREATE TABLE public.role (
+    name character varying NOT NULL
+);
+CREATE TABLE public.seen_hint (
+    user_id uuid NOT NULL,
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    hint_id uuid NOT NULL
+);
+CREATE TABLE public.volunteer_shift (
+    start time with time zone NOT NULL,
+    "end" time with time zone NOT NULL,
+    date date NOT NULL,
+    volunteer_id uuid NOT NULL,
+    confirmed boolean DEFAULT false NOT NULL,
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    hospital_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE VIEW public.shifts AS
+ SELECT (days.date)::date AS date,
+    period.start,
+    period."end",
+    count(DISTINCT period.hospital_id) AS hospitalscount,
+    sum(period.demand) AS demand,
+    (((sum(period.demand))::numeric - COALESCE(sum(vs_stat.subs), (0)::numeric)))::bigint AS placesavailable
+   FROM ((public.period
+     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(date) ON (true))
+     LEFT JOIN ( SELECT volunteer_shift.date,
+            volunteer_shift.start,
+            volunteer_shift."end",
+            count(volunteer_shift.uid) AS subs,
+            volunteer_shift.hospital_id
+           FROM public.volunteer_shift
+          GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND (vs_stat.hospital_id = period.hospital_id))))
+  GROUP BY ((days.date)::date), period.start, period."end";
+CREATE TABLE public.special_shift (
+    start time with time zone NOT NULL,
+    "end" time with time zone NOT NULL,
+    date date NOT NULL,
+    hospital_id uuid NOT NULL,
+    demand integer NOT NULL,
+    uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE ONLY public.blacklist
+    ADD CONSTRAINT blacklist_pkey PRIMARY KEY (uid);
+ALTER TABLE ONLY public.hint
+    ADD CONSTRAINT hint_name_key UNIQUE (name);
+ALTER TABLE ONLY public.hint
+    ADD CONSTRAINT hint_pkey PRIMARY KEY (name);
+ALTER TABLE ONLY public.hint
+    ADD CONSTRAINT hint_uid_key UNIQUE (uid);
+ALTER TABLE ONLY public.hint
+    ADD CONSTRAINT hints_text_key UNIQUE (text);
+ALTER TABLE ONLY public.hospital
+    ADD CONSTRAINT hospital_address_key UNIQUE (address);
+ALTER TABLE ONLY public.hospital_coordinator
+    ADD CONSTRAINT hospital_coordinator_pkey PRIMARY KEY (hospital_id, coophone);
+ALTER TABLE ONLY public.hospital
+    ADD CONSTRAINT hospital_name_key UNIQUE (name);
+ALTER TABLE ONLY public.hospital
+    ADD CONSTRAINT hospital_phone_key UNIQUE (phone);
+ALTER TABLE ONLY public.hospital
+    ADD CONSTRAINT hospital_pkey PRIMARY KEY (uid);
+ALTER TABLE ONLY public.hospital
+    ADD CONSTRAINT hospital_uid_key UNIQUE (uid);
+ALTER TABLE ONLY public.period
+    ADD CONSTRAINT period_pkey PRIMARY KEY (uid);
+ALTER TABLE ONLY public.profession
+    ADD CONSTRAINT profession_name_key UNIQUE (name);
 ALTER TABLE ONLY public.profession
     ADD CONSTRAINT profession_pkey PRIMARY KEY (name);
-ALTER TABLE ONLY public.shift
-    ADD CONSTRAINT shift_pkey PRIMARY KEY (uid);
-ALTER TABLE ONLY public.shift_profession
-    ADD CONSTRAINT shift_profession_pkey PRIMARY KEY (shift_id, profession);
-ALTER TABLE ONLY public.shift
-    ADD CONSTRAINT shift_start_end_date_key UNIQUE (start, "end", date);
+ALTER TABLE ONLY public.role
+    ADD CONSTRAINT role_pkey PRIMARY KEY (name);
+ALTER TABLE ONLY public.seen_hint
+    ADD CONSTRAINT seen_hint_pkey PRIMARY KEY (uid);
+ALTER TABLE ONLY public.seen_hint
+    ADD CONSTRAINT seen_hint_user_id_hint_id_key UNIQUE (user_id, hint_id);
+ALTER TABLE ONLY public.special_shift
+    ADD CONSTRAINT special_shift_pkey PRIMARY KEY (start, "end");
+ALTER TABLE ONLY public.special_shift
+    ADD CONSTRAINT special_shift_start_end_date_key UNIQUE (start, "end", date);
 ALTER TABLE ONLY public.volunteer
-    ADD CONSTRAINT volunteer_phone_email_key UNIQUE (phone, email);
+    ADD CONSTRAINT volunteer_phone_key UNIQUE (phone);
 ALTER TABLE ONLY public.volunteer
     ADD CONSTRAINT volunteer_pkey PRIMARY KEY (uid);
 ALTER TABLE ONLY public.volunteer_shift
-    ADD CONSTRAINT volunteer_shift_pkey PRIMARY KEY (volunteer_id, shift_id);
-ALTER TABLE ONLY public.shift_profession
-    ADD CONSTRAINT shift_profession_professsion_fkey FOREIGN KEY (profession) REFERENCES public.profession(name) ON UPDATE RESTRICT ON DELETE RESTRICT;
-ALTER TABLE ONLY public.shift_profession
-    ADD CONSTRAINT shift_profession_shift_id_fkey FOREIGN KEY (shift_id) REFERENCES public.shift(uid) ON UPDATE CASCADE ON DELETE CASCADE;
-ALTER TABLE ONLY public.volunteer
-    ADD CONSTRAINT volunteer_profession_fkey FOREIGN KEY (profession) REFERENCES public.profession(name) ON UPDATE RESTRICT ON DELETE RESTRICT;
+    ADD CONSTRAINT volunteer_shift_pkey PRIMARY KEY (uid);
 ALTER TABLE ONLY public.volunteer_shift
-    ADD CONSTRAINT volunteer_shift_shift_id_fkey FOREIGN KEY (shift_id) REFERENCES public.shift(uid) ON UPDATE RESTRICT ON DELETE RESTRICT;
+    ADD CONSTRAINT volunteer_shift_start_date_end_volunteer_id_key UNIQUE (start, date, "end", volunteer_id);
+ALTER TABLE ONLY public.volunteer_shift
+    ADD CONSTRAINT volunteer_shift_uid_key UNIQUE (uid);
+ALTER TABLE ONLY public.vshift
+    ADD CONSTRAINT vshift_pkey PRIMARY KEY (uid);
+CREATE TRIGGER drop_shifts_for_blacklisted AFTER INSERT ON public.blacklist FOR EACH ROW EXECUTE FUNCTION public.drop_shifts_for();
+CREATE TRIGGER set_public_blacklist_updated_at BEFORE UPDATE ON public.blacklist FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+COMMENT ON TRIGGER set_public_blacklist_updated_at ON public.blacklist IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+CREATE TRIGGER set_public_hospital_coordinator_updated_at BEFORE UPDATE ON public.hospital_coordinator FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+COMMENT ON TRIGGER set_public_hospital_coordinator_updated_at ON public.hospital_coordinator IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+CREATE TRIGGER set_public_hospital_updated_at BEFORE UPDATE ON public.hospital FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+COMMENT ON TRIGGER set_public_hospital_updated_at ON public.hospital IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+CREATE TRIGGER set_public_period_updated_at BEFORE UPDATE ON public.period FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+COMMENT ON TRIGGER set_public_period_updated_at ON public.period IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+CREATE TRIGGER set_public_special_shift_updated_at BEFORE UPDATE ON public.special_shift FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+COMMENT ON TRIGGER set_public_special_shift_updated_at ON public.special_shift IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+CREATE TRIGGER set_public_volunteer_shift_updated_at BEFORE UPDATE ON public.volunteer_shift FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+COMMENT ON TRIGGER set_public_volunteer_shift_updated_at ON public.volunteer_shift IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+CREATE TRIGGER set_public_volunteer_updated_at BEFORE UPDATE ON public.volunteer FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+COMMENT ON TRIGGER set_public_volunteer_updated_at ON public.volunteer IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+ALTER TABLE ONLY public.blacklist
+    ADD CONSTRAINT blacklist_volunteer_id_fkey FOREIGN KEY (volunteer_id) REFERENCES public.volunteer(uid) ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE ONLY public.hospital_coordinator
+    ADD CONSTRAINT hospital_coordinator_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY public.period
+    ADD CONSTRAINT period_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY public.seen_hint
+    ADD CONSTRAINT seen_hint_hint_id_fkey FOREIGN KEY (hint_id) REFERENCES public.hint(uid) ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE ONLY public.seen_hint
+    ADD CONSTRAINT seen_hint_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.volunteer(uid) ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE ONLY public.special_shift
+    ADD CONSTRAINT special_shift_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY public.volunteer
+    ADD CONSTRAINT volunteer_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE SET NULL ON DELETE SET NULL;
+ALTER TABLE ONLY public.volunteer_shift
+    ADD CONSTRAINT volunteer_shift_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE RESTRICT ON DELETE RESTRICT;
 ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_volunteer_id_fkey FOREIGN KEY (volunteer_id) REFERENCES public.volunteer(uid) ON UPDATE CASCADE ON DELETE CASCADE;
+INSERT INTO public.hint (name, text) VALUES ('welcome', 'Спасибо за то, что готовы помочь! Нажмите на свободную смену ниже, чтобы записаться, а мы позвоним накануне и напомним. Двойная галочка означет подтверждение смены (координатор подтвердил Вам смену). Если вы не уверены, не ставьте галочку, потому что другие не смогут записаться на это время. Чтобы отменить запись, повторно кликните на неё');
+INSERT INTO public.hint (name, text) VALUES ('how_confirm', 'Нажмите на аватарку волонтёра чтобы подтвердить присутствие');
