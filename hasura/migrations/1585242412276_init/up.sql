@@ -6,11 +6,6 @@ delete from volunteer_shift where volunteer_id = NEW.volunteer_id;
 RETURN NEW;
 end;
 $$;
-CREATE FUNCTION public.drop_shifts_for(vuid uuid) RETURNS void
-    LANGUAGE sql STABLE
-    AS $$
-delete from volunteer_shift where volunteer_id = vuid;
-$$;
 CREATE FUNCTION public.set_current_timestamp_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -31,52 +26,6 @@ CREATE TABLE public.vshift (
     placesavailable integer NOT NULL,
     uid uuid NOT NULL
 );
-CREATE FUNCTION public.shift_selector(_hospital_id uuid DEFAULT NULL::uuid) RETURNS SETOF public.vshift
-    LANGUAGE sql STABLE
-    AS $$ 
-SELECT (days.date)::date AS date,
-    period.start,
-    period."end",
-    count(DISTINCT period.hospital_id)::integer AS hospitalscount,
-    sum(period.demand)::integer AS demand,
-    (((sum(period.demand))::numeric - COALESCE(sum(vs_stat.subs), (0)::numeric)))::integer AS placesavailable,
-    gen_random_uuid() as uid
-   FROM ((period
-     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(date) ON (true))
-     LEFT JOIN ( SELECT volunteer_shift.date,
-            volunteer_shift.start,
-            volunteer_shift."end",
-            count(volunteer_shift.uid) AS subs,
-            hospital_id
-           FROM volunteer_shift
-          GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND vs_stat.hospital_id = period.hospital_id)))
-  WHERE CASE WHEN _hospital_id IS NULL THEN TRUE ELSE period.hospital_id = _hospital_id END 
-  GROUP BY ((days.date)::date), period.start, period."end"
-  ORDER BY date, period.start;
-  $$;
-CREATE FUNCTION public.shift_selector2(hospital_ids text[] DEFAULT NULL::text[]) RETURNS SETOF public.vshift
-    LANGUAGE sql STABLE
-    AS $$ 
-SELECT (days.date)::date AS date,
-    period.start,
-    period."end",
-    count(DISTINCT period.hospital_id)::integer AS hospitalscount,
-    sum(period.demand)::integer AS demand,
-    (((sum(period.demand))::numeric - COALESCE(sum(vs_stat.subs), (0)::numeric)))::integer AS placesavailable,
-    gen_random_uuid() as uid
-   FROM ((period
-     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(date) ON (true))
-     LEFT JOIN ( SELECT volunteer_shift.date,
-            volunteer_shift.start,
-            volunteer_shift."end",
-            count(volunteer_shift.uid) AS subs,
-            hospital_id
-           FROM volunteer_shift
-          GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND vs_stat.hospital_id = period.hospital_id)))
-  WHERE CASE WHEN hospital_ids IS NULL THEN TRUE ELSE period.hospital_id = ANY(hospital_ids::uuid[]) END 
-  GROUP BY ((days.date)::date), period.start, period."end"
-  ORDER BY date, period.start;
-  $$;
 CREATE TABLE public.hint (
     uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
     text character varying NOT NULL,
@@ -273,7 +222,7 @@ ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_uid_key UNIQUE (uid);
 ALTER TABLE ONLY public.vshift
     ADD CONSTRAINT vshift_pkey PRIMARY KEY (uid);
-CREATE TRIGGER drop_shifts_for_blacklisted AFTER INSERT ON public.blacklist FOR EACH ROW EXECUTE FUNCTION public.drop_shifts_for();
+-- CREATE TRIGGER drop_shifts_for_blacklisted AFTER INSERT ON public.blacklist FOR EACH ROW EXECUTE FUNCTION public.drop_shifts_for();
 CREATE TRIGGER set_public_blacklist_updated_at BEFORE UPDATE ON public.blacklist FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_blacklist_updated_at ON public.blacklist IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 CREATE TRIGGER set_public_hospital_coordinator_updated_at BEFORE UPDATE ON public.hospital_coordinator FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
@@ -306,5 +255,56 @@ ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE RESTRICT ON DELETE RESTRICT;
 ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_volunteer_id_fkey FOREIGN KEY (volunteer_id) REFERENCES public.volunteer(uid) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE FUNCTION public.drop_shifts_for(vuid uuid) RETURNS void
+    LANGUAGE sql STABLE
+    AS $$
+delete from volunteer_shift where volunteer_id = vuid;
+$$;
+CREATE FUNCTION public.shift_selector(_hospital_id uuid DEFAULT NULL::uuid) RETURNS SETOF public.vshift
+    LANGUAGE sql STABLE
+    AS $$ 
+SELECT (days.date)::date AS date,
+    period.start,
+    period."end",
+    count(DISTINCT period.hospital_id)::integer AS hospitalscount,
+    sum(period.demand)::integer AS demand,
+    (((sum(period.demand))::numeric - COALESCE(sum(vs_stat.subs), (0)::numeric)))::integer AS placesavailable,
+    gen_random_uuid() as uid
+   FROM ((period
+     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(date) ON (true))
+     LEFT JOIN ( SELECT volunteer_shift.date,
+            volunteer_shift.start,
+            volunteer_shift."end",
+            count(volunteer_shift.uid) AS subs,
+            hospital_id
+           FROM volunteer_shift
+          GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND vs_stat.hospital_id = period.hospital_id)))
+  WHERE CASE WHEN _hospital_id IS NULL THEN TRUE ELSE period.hospital_id = _hospital_id END 
+  GROUP BY ((days.date)::date), period.start, period."end"
+  ORDER BY date, period.start;
+  $$;
+CREATE FUNCTION public.shift_selector2(hospital_ids text[] DEFAULT NULL::text[]) RETURNS SETOF public.vshift
+    LANGUAGE sql STABLE
+    AS $$ 
+SELECT (days.date)::date AS date,
+    period.start,
+    period."end",
+    count(DISTINCT period.hospital_id)::integer AS hospitalscount,
+    sum(period.demand)::integer AS demand,
+    (((sum(period.demand))::numeric - COALESCE(sum(vs_stat.subs), (0)::numeric)))::integer AS placesavailable,
+    gen_random_uuid() as uid
+   FROM ((period
+     LEFT JOIN generate_series((CURRENT_DATE)::timestamp without time zone, (CURRENT_DATE + '14 days'::interval), '1 day'::interval) days(date) ON (true))
+     LEFT JOIN ( SELECT volunteer_shift.date,
+            volunteer_shift.start,
+            volunteer_shift."end",
+            count(volunteer_shift.uid) AS subs,
+            hospital_id
+           FROM volunteer_shift
+          GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND vs_stat.hospital_id = period.hospital_id)))
+  WHERE CASE WHEN hospital_ids IS NULL THEN TRUE ELSE period.hospital_id = ANY(hospital_ids::uuid[]) END 
+  GROUP BY ((days.date)::date), period.start, period."end"
+  ORDER BY date, period.start;
+  $$;
 INSERT INTO public.hint (name, text) VALUES ('welcome', 'Спасибо за то, что готовы помочь! Нажмите на свободную смену ниже, чтобы записаться, а мы позвоним накануне и напомним. Двойная галочка означет подтверждение смены (координатор подтвердил Вам смену). Если вы не уверены, не ставьте галочку, потому что другие не смогут записаться на это время. Чтобы отменить запись, повторно кликните на неё');
 INSERT INTO public.hint (name, text) VALUES ('how_confirm', 'Нажмите на аватарку волонтёра чтобы подтвердить присутствие');
