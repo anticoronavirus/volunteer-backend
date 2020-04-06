@@ -26,9 +26,10 @@
                 name: hospital
                 schema: public
               _where:
-                coordinators:
-                  uid:
-                    _eq: X-Hasura-User-Id
+                hospital_coordinators:
+                  coordinator:
+                    uid:
+                      _eq: X-Hasura-User-Id
           columns:
           - comment
           - volunteer_id
@@ -51,9 +52,10 @@
                 name: hospital
                 schema: public
               _where:
-                coordinators:
-                  uid:
-                    _eq: X-Hasura-User-Id
+                hospital_coordinators:
+                  coordinator:
+                    uid:
+                      _eq: X-Hasura-User-Id
         role: volunteer
       table:
         name: blacklist
@@ -102,6 +104,18 @@
                 user_id:
                   _eq: X-Hasura-User-Id
         role: volunteer
+      - permission:
+          columns:
+          - uid
+          - text
+          - name
+          filter:
+            _exists:
+              _table:
+                name: me
+                schema: public
+              _where: {}
+        role: voyeur
       table:
         name: hint
         schema: public
@@ -170,11 +184,22 @@
           coophone: coophone
         custom_root_fields: {}
       object_relationships:
+      - name: coordinator
+        using:
+          manual_configuration:
+            column_mapping:
+              coophone: phone
+            remote_table:
+              name: volunteer
+              schema: public
       - name: hospital
         using:
           foreign_key_constraint_on: hospital_id
       table:
         name: hospital_coordinator
+        schema: public
+    - table:
+        name: hospital_coordinators_view
         schema: public
     - object_relationships:
       - name: managedHospital
@@ -188,17 +213,19 @@
       select_permissions:
       - permission:
           columns:
-          - uid
-          - fname
-          - mname
-          - lname
-          - phone
-          - email
-          - role
-          - password
-          - hospital_id
           - comment
           - created_at
+          - email
+          - fname
+          - hospital_id
+          - is_hatching
+          - lname
+          - mname
+          - password
+          - phone
+          - profession
+          - role
+          - uid
           - updated_at
           filter:
             uid:
@@ -206,18 +233,20 @@
         role: volunteer
       - permission:
           columns:
-          - created_at
-          - updated_at
-          - hospital_id
-          - uid
           - comment
+          - created_at
           - email
           - fname
+          - hospital_id
+          - is_hatching
           - lname
           - mname
           - password
           - phone
+          - profession
           - role
+          - uid
+          - updated_at
           filter:
             uid:
               _is_null: true
@@ -396,10 +425,12 @@
           - email
           - fname
           - hospital_id
+          - is_hatching
           - lname
           - mname
           - password
           - phone
+          - profession
           - role
           - uid
           filter:
@@ -408,15 +439,17 @@
                 _eq: X-Hasura-User-Id
             - volunteer_shifts:
                 hospital:
-                  coordinators:
-                    uid:
-                      _eq: X-Hasura-User-Id
+                  hospital_coordinators:
+                    coordinator:
+                      uid:
+                        _eq: X-Hasura-User-Id
         role: volunteer
       - permission:
           columns:
           - fname
           - lname
           - mname
+          - phone
           - role
           - uid
           filter: {}
@@ -430,15 +463,25 @@
           - comment
           - email
           - fname
+          - hospital_id
+          - is_hatching
           - lname
           - mname
           - password
           - phone
+          - profession
           - role
           - uid
           filter:
-            uid:
-              _eq: X-Hasura-User-Id
+            _or:
+            - uid:
+                _eq: X-Hasura-User-Id
+            - volunteer_shifts:
+                hospital:
+                  hospital_coordinators:
+                    coordinator:
+                      uid:
+                        _eq: X-Hasura-User-Id
         role: volunteer
     - delete_permissions:
       - permission:
@@ -459,9 +502,10 @@
               - volunteer_id:
                   _eq: X-Hasura-User-Id
               - hospital:
-                  coordinators:
-                    uid:
-                      _eq: X-Hasura-User-Id
+                  hospital_coordinators:
+                    coordinator:
+                      uid:
+                        _eq: X-Hasura-User-Id
             - _not:
                 _exists:
                   _table:
@@ -502,21 +546,33 @@
           - uid
           - volunteer_id
           filter:
-            _or:
-            - volunteer_id:
-                _eq: X-Hasura-User-Id
-            - hospital:
-                coordinators:
-                  uid:
-                    _eq: X-Hasura-User-Id
+            _and:
+            - _or:
+              - volunteer_id:
+                  _eq: X-Hasura-User-Id
+              - hospital:
+                  hospital_coordinators:
+                    coordinator:
+                      uid:
+                        _eq: X-Hasura-User-Id
+            - _not:
+                _exists:
+                  _table:
+                    name: blacklist
+                    schema: public
+                  _where:
+                    volunteer_id:
+                      _eq: X-Hasura-User-Id
         role: volunteer
       - permission:
           columns:
           - confirmed
           - date
+          - created_at
+          - updated_at
           - end
-          - hospital_id
           - start
+          - hospital_id
           - uid
           - volunteer_id
           filter:
@@ -532,9 +588,10 @@
           - confirmed
           filter:
             hospital:
-              coordinators:
-                uid:
-                  _eq: X-Hasura-User-Id
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
         role: volunteer
     - array_relationships:
       - name: shiftRequests

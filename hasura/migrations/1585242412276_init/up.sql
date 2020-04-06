@@ -3,6 +3,7 @@ CREATE FUNCTION public.drop_shifts_for() RETURNS trigger
     AS $$
 begin
 delete from volunteer_shift where volunteer_id = NEW.volunteer_id;
+RETURN NEW;
 end;
 $$;
 CREATE FUNCTION public.drop_shifts_for(vuid uuid) RETURNS void
@@ -30,7 +31,7 @@ CREATE TABLE public.vshift (
     placesavailable integer NOT NULL,
     uid uuid NOT NULL
 );
-CREATE FUNCTION public.shift_selector(hospital_ids uuid[] DEFAULT NULL::uuid[]) RETURNS SETOF public.vshift
+CREATE FUNCTION public.shift_selector(_hospital_id uuid DEFAULT NULL::uuid) RETURNS SETOF public.vshift
     LANGUAGE sql STABLE
     AS $$ 
 SELECT (days.date)::date AS date,
@@ -49,7 +50,7 @@ SELECT (days.date)::date AS date,
             hospital_id
            FROM volunteer_shift
           GROUP BY volunteer_shift.date, volunteer_shift.start, volunteer_shift."end", volunteer_shift.hospital_id) vs_stat ON (((vs_stat.date = (days.date)::date) AND (vs_stat.start = period.start) AND (vs_stat."end" = period."end") AND vs_stat.hospital_id = period.hospital_id)))
-  WHERE CASE WHEN hospital_ids IS NULL THEN TRUE ELSE period.hospital_id = ANY(hospital_ids) END 
+  WHERE CASE WHEN _hospital_id IS NULL THEN TRUE ELSE period.hospital_id = _hospital_id END 
   GROUP BY ((days.date)::date), period.start, period."end"
   ORDER BY date, period.start;
   $$;
@@ -79,7 +80,7 @@ SELECT (days.date)::date AS date,
 CREATE TABLE public.hint (
     uid uuid DEFAULT public.gen_random_uuid() NOT NULL,
     text character varying NOT NULL,
-    name bpchar NOT NULL
+    name character varying NOT NULL
 );
 CREATE FUNCTION public.unseen_hint(hasura_session json, name character) RETURNS SETOF public.hint
     LANGUAGE sql STABLE
@@ -129,8 +130,25 @@ CREATE TABLE public.volunteer (
     hospital_id uuid,
     comment character varying,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    is_hatching boolean DEFAULT true NOT NULL,
+    profession text DEFAULT 'студент'::text NOT NULL
 );
+CREATE VIEW public.hospital_coordinators_view AS
+ SELECT hospital_coordinator.hospital_id,
+    volunteer.uid,
+    volunteer.fname,
+    volunteer.mname,
+    volunteer.lname,
+    volunteer.phone,
+    volunteer.email,
+    volunteer.role,
+    volunteer.password,
+    volunteer.comment,
+    volunteer.created_at,
+    volunteer.updated_at
+   FROM (public.hospital_coordinator
+     LEFT JOIN public.volunteer ON ((hospital_coordinator.coophone = (volunteer.phone)::text)));
 CREATE VIEW public.me AS
  SELECT volunteer.uid,
     volunteer.fname,
@@ -143,7 +161,9 @@ CREATE VIEW public.me AS
     volunteer.hospital_id,
     volunteer.comment,
     volunteer.created_at,
-    volunteer.updated_at
+    volunteer.updated_at,
+    volunteer.is_hatching,
+    volunteer.profession
    FROM public.volunteer;
 CREATE TABLE public.period (
     start time with time zone NOT NULL,
@@ -206,6 +226,8 @@ CREATE TABLE public.special_shift (
 ALTER TABLE ONLY public.blacklist
     ADD CONSTRAINT blacklist_pkey PRIMARY KEY (uid);
 ALTER TABLE ONLY public.hint
+    ADD CONSTRAINT hint_name_key UNIQUE (name);
+ALTER TABLE ONLY public.hint
     ADD CONSTRAINT hint_pkey PRIMARY KEY (name);
 ALTER TABLE ONLY public.hint
     ADD CONSTRAINT hint_uid_key UNIQUE (uid);
@@ -251,7 +273,7 @@ ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_uid_key UNIQUE (uid);
 ALTER TABLE ONLY public.vshift
     ADD CONSTRAINT vshift_pkey PRIMARY KEY (uid);
-CREATE TRIGGER drop_shift_for_newly_blacklisted AFTER INSERT ON public.blacklist FOR EACH STATEMENT EXECUTE FUNCTION public.drop_shifts_for();
+CREATE TRIGGER drop_shifts_for_blacklisted AFTER INSERT ON public.blacklist FOR EACH ROW EXECUTE FUNCTION public.drop_shifts_for();
 CREATE TRIGGER set_public_blacklist_updated_at BEFORE UPDATE ON public.blacklist FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_blacklist_updated_at ON public.blacklist IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 CREATE TRIGGER set_public_hospital_coordinator_updated_at BEFORE UPDATE ON public.hospital_coordinator FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
@@ -280,6 +302,8 @@ ALTER TABLE ONLY public.special_shift
     ADD CONSTRAINT special_shift_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE ONLY public.volunteer
     ADD CONSTRAINT volunteer_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE SET NULL ON DELETE SET NULL;
+ALTER TABLE ONLY public.volunteer_shift
+    ADD CONSTRAINT volunteer_shift_hospital_id_fkey FOREIGN KEY (hospital_id) REFERENCES public.hospital(uid) ON UPDATE RESTRICT ON DELETE RESTRICT;
 ALTER TABLE ONLY public.volunteer_shift
     ADD CONSTRAINT volunteer_shift_volunteer_id_fkey FOREIGN KEY (volunteer_id) REFERENCES public.volunteer(uid) ON UPDATE CASCADE ON DELETE CASCADE;
 INSERT INTO public.hint (name, text) VALUES ('welcome', 'Спасибо за то, что готовы помочь! Нажмите на свободную смену ниже, чтобы записаться, а мы позвоним накануне и напомним. Двойная галочка означет подтверждение смены (координатор подтвердил Вам смену). Если вы не уверены, не ставьте галочку, потому что другие не смогут записаться на это время. Чтобы отменить запись, повторно кликните на неё');
