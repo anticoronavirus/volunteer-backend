@@ -1,0 +1,52 @@
+- args:
+    name: volunteer_shifts
+    table:
+      name: hospital
+      schema: public
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          name: volunteer_shift
+          schema: public
+  type: create_array_relationship
+- args:
+    name: provisioned_documents
+    table:
+      name: hospital
+      schema: public
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          name: provisioned_document
+          schema: public
+  type: create_array_relationship
+- args:
+    name: hospital
+    table:
+      name: provisioned_document
+      schema: public
+    using:
+      foreign_key_constraint_on: hospital_id
+  type: create_object_relationship
+- args:
+    name: volunteer
+    table:
+      name: provisioned_document
+      schema: public
+    using:
+      foreign_key_constraint_on: volunteer_id
+  type: create_object_relationship
+- args:
+    name: provisioned_documents
+    table:
+      name: volunteer
+      schema: public
+    using:
+      foreign_key_constraint_on:
+        column: volunteer_id
+        table:
+          name: provisioned_document
+          schema: public
+  type: create_array_relationship

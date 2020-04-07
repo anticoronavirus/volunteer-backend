@@ -1,0 +1,21 @@
+- args:
+    permission:
+      allow_upsert: true
+      check:
+        hospital:
+          hospital_coordinators:
+            coordinator:
+              uid:
+                _eq: X-Hasura-User-Id
+      columns:
+      - hospital_id
+      - volunteer_id
+      localPresets:
+      - key: ""
+        value: ""
+      set: {}
+    role: volunteer
+    table:
+      name: provisioned_document
+      schema: public
+  type: create_insert_permission

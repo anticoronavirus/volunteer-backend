@@ -1,0 +1,6 @@
+- args:
+    role: volunteer
+    table:
+      name: provisioned_document
+      schema: public
+  type: drop_insert_permission
