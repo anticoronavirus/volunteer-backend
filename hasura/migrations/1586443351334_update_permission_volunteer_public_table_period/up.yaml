@@ -1,0 +1,19 @@
+- args:
+    role: volunteer
+    table:
+      name: period
+      schema: public
+  type: drop_delete_permission
+- args:
+    permission:
+      filter:
+        hospital:
+          hospital_coordinators:
+            coordinator:
+              uid:
+                _eq: X-Hasura-User-Id
+    role: volunteer
+    table:
+      name: period
+      schema: public
+  type: create_delete_permission
