@@ -1,0 +1,31 @@
+- args:
+    role: volunteer
+    table:
+      name: volunteer_shift
+      schema: public
+  type: drop_delete_permission
+- args:
+    permission:
+      filter:
+        _and:
+        - _or:
+          - volunteer_id:
+              _eq: X-Hasura-User-Id
+          - hospital:
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
+        - _not:
+            _exists:
+              _table:
+                name: blacklist
+                schema: public
+              _where:
+                volunteer_id:
+                  _eq: X-Hasura-User-Id
+    role: volunteer
+    table:
+      name: volunteer_shift
+      schema: public
+  type: create_delete_permission
