@@ -1,0 +1,12 @@
+- args:
+    permission:
+      allow_aggregations: true
+      columns: []
+      computed_fields: []
+      filter: {}
+      limit: null
+    role: voyeur
+    table:
+      name: provisioned_document
+      schema: public
+  type: create_select_permission
