@@ -1,0 +1,6 @@
+- args:
+    relationship: hospitals
+    table:
+      name: hospital_coordinator
+      schema: public
+  type: drop_relationship
