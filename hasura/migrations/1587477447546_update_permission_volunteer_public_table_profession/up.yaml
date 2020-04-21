@@ -1,0 +1,13 @@
+- args:
+    permission:
+      allow_aggregations: true
+      columns:
+      - name
+      computed_fields: []
+      filter: {}
+      limit: null
+    role: volunteer
+    table:
+      name: profession
+      schema: public
+  type: create_select_permission
