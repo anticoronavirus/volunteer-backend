@@ -1,0 +1,20 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."page" ADD COLUMN "version" int4;
+  type: run_sql
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."page" ALTER COLUMN "version" DROP NOT NULL;
+  type: run_sql
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."page" ADD CONSTRAINT page_version_key UNIQUE (version);
+  type: run_sql
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."page" ALTER COLUMN "version" SET DEFAULT 1;
+  type: run_sql
