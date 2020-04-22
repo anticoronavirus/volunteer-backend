@@ -6,7 +6,7 @@
       INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Эпидемиология', '', '', false);
       INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Лаборатория', '', '', false);
       INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Статистика', '', '', false);
-      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Прачечная ', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Прачечная', '', '', false);
       INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Столовая', '', '', false);
       INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Уборка', '', '', false);
       INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('КПП', '', '', false);
