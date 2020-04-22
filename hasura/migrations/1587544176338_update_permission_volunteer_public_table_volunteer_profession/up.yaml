@@ -1,0 +1,10 @@
+- args:
+    permission:
+      filter:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+    role: volunteer
+    table:
+      name: volunteer_profession
+      schema: public
+  type: create_delete_permission

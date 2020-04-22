@@ -1,0 +1,17 @@
+- args:
+    permission:
+      columns:
+      - profession_id
+      - volunteer_id
+      filter:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+      localPresets:
+      - key: ""
+        value: ""
+      set: {}
+    role: volunteer
+    table:
+      name: volunteer_profession
+      schema: public
+  type: create_update_permission

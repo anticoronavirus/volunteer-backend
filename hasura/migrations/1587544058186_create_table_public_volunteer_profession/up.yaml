@@ -1,0 +1,18 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: CREATE EXTENSION IF NOT EXISTS pgcrypto;
+  type: run_sql
+- args:
+    cascade: false
+    read_only: false
+    sql: CREATE TABLE "public"."volunteer_profession"("uuid" uuid NOT NULL DEFAULT
+      gen_random_uuid(), "volunteer_id" uuid NOT NULL, "profession_id" uuid NOT NULL,
+      PRIMARY KEY ("uuid") , FOREIGN KEY ("volunteer_id") REFERENCES "public"."volunteer"("uid")
+      ON UPDATE cascade ON DELETE cascade, FOREIGN KEY ("profession_id") REFERENCES
+      "public"."profession"("uid") ON UPDATE cascade ON DELETE cascade, UNIQUE ("uuid"));
+  type: run_sql
+- args:
+    name: volunteer_profession
+    schema: public
+  type: add_existing_table_or_view
