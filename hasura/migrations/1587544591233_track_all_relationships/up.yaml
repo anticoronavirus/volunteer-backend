@@ -1,0 +1,60 @@
+- args:
+    name: professionByProfession
+    table:
+      name: period
+      schema: public
+    using:
+      foreign_key_constraint_on: profession
+  type: create_object_relationship
+- args:
+    name: periods
+    table:
+      name: profession
+      schema: public
+    using:
+      foreign_key_constraint_on:
+        column: profession
+        table:
+          name: period
+          schema: public
+  type: create_array_relationship
+- args:
+    name: volunteer_professions
+    table:
+      name: profession
+      schema: public
+    using:
+      foreign_key_constraint_on:
+        column: profession_id
+        table:
+          name: volunteer_profession
+          schema: public
+  type: create_array_relationship
+- args:
+    name: volunteer_professions
+    table:
+      name: volunteer
+      schema: public
+    using:
+      foreign_key_constraint_on:
+        column: volunteer_id
+        table:
+          name: volunteer_profession
+          schema: public
+  type: create_array_relationship
+- args:
+    name: profession
+    table:
+      name: volunteer_profession
+      schema: public
+    using:
+      foreign_key_constraint_on: profession_id
+  type: create_object_relationship
+- args:
+    name: volunteer
+    table:
+      name: volunteer_profession
+      schema: public
+    using:
+      foreign_key_constraint_on: volunteer_id
+  type: create_object_relationship
