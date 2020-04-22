@@ -1,0 +1,5 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."profession" DROP COLUMN "requirements";
+  type: run_sql

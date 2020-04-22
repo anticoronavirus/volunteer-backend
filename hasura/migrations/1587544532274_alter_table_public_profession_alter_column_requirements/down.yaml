@@ -1,0 +1,6 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE ONLY "public"."profession" ALTER COLUMN "requirements" SET DEFAULT
+      '''''::text';
+  type: run_sql
