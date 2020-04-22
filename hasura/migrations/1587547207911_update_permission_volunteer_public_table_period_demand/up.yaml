@@ -1,0 +1,16 @@
+- args:
+    permission:
+      allow_aggregations: false
+      columns:
+      - uid
+      - period_id
+      - profession_id
+      - demand
+      computed_fields: []
+      filter: {}
+      limit: null
+    role: volunteer
+    table:
+      name: period_demand
+      schema: public
+  type: create_select_permission

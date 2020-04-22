@@ -1,0 +1,24 @@
+- args:
+    relationship: period_demands
+    table:
+      name: period
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: period
+    table:
+      name: period_demand
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: profession
+    table:
+      name: period_demand
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: period_demands
+    table:
+      name: profession
+      schema: public
+  type: drop_relationship
