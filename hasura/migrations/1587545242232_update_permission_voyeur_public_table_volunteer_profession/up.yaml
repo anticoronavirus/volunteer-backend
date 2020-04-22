@@ -1,0 +1,15 @@
+- args:
+    permission:
+      allow_aggregations: false
+      columns:
+      - uuid
+      - volunteer_id
+      - profession_id
+      computed_fields: []
+      filter: {}
+      limit: null
+    role: voyeur
+    table:
+      name: volunteer_profession
+      schema: public
+  type: create_select_permission
