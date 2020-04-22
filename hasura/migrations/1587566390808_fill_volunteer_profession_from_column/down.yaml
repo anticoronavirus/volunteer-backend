@@ -1,1 +1,6 @@
-[]
+- args:
+    cascade: false
+    read_only: false
+    sql: |-
+      delete from volunteer_profession;
+  type: run_sql

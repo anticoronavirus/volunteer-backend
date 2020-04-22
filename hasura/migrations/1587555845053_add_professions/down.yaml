@@ -1,1 +1,6 @@
-[]
+- args:
+    cascade: false
+    read_only: false
+    sql: |-
+      delete from profession;
+  type: run_sql

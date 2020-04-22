@@ -1,1 +1,6 @@
-[]
+- args:
+    cascade: false
+    read_only: false
+    sql: |-
+      delete from period_demand;
+  type: run_sql
