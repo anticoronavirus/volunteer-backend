@@ -1,0 +1,16 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: |-
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Санитар', '', '', true);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Эпидемиология', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Лаборатория', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Статистика ', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Прачечная ', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Столовая', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Уборка', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('КПП', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Склад', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Ресепшн', '', '', false);
+      INSERT INTO PROFESSION(name, description, requirements, dangerous)VALUES ('Колл-центр', '', '', false);
+  type: run_sql
