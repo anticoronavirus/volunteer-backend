@@ -1,0 +1,5 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: alter table "public"."period" drop constraint "period_profession_fkey";
+  type: run_sql

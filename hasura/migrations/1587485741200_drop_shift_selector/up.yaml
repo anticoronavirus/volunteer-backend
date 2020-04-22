@@ -1,0 +1,5 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: drop function shift_selector;
+  type: run_sql

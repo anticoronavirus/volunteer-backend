@@ -1,0 +1,29 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: "CREATE OR REPLACE FUNCTION public.shift_selector(\n  _hospital_id uuid DEFAULT
+      NULL::uuid,\n  professions uuid[] default '{}'::uuid[]\n )\n RETURNS SETOF vshift\n
+      LANGUAGE sql\n STABLE\nAS $function$ \nSELECT (days.date)::date AS date,\n    period.start,\n
+      \   period.\"end\",\n    count(DISTINCT period.hospital_id)::integer AS hospitalscount,\n
+      \   sum(period.demand)::integer AS demand,\n    (((sum(period.demand))::numeric
+      - COALESCE(sum(vs_stat.subs), (0)::numeric) - sum(period.reserved)))::integer
+      AS placesavailable,\n    gen_random_uuid() as uid\n    FROM (\n    ((select\n
+      \       profession,\n        start,\n        \"end\",\n        hospital_id,\n
+      \       demand,\n        CASE WHEN shortname = 'Коммунарка' THEN demand\n             ELSE
+      0\n        END AS reserved\n        FROM period\n        INNER JOIN hospital
+      ON hospital.uid = hospital_id) period\n        LEFT JOIN generate_series(\n
+      \           (CURRENT_DATE)::timestamp without time zone,\n            (CURRENT_DATE
+      + '14 days'::interval),\n            '1 day'::interval) days(date) ON (true))\n
+      \       LEFT JOIN ( SELECT volunteer_shift.date,\n                           volunteer_shift.start,\n
+      \                          volunteer_shift.\"end\",\n                           count(volunteer_shift.uid)
+      AS subs,\n                           hospital_id\n                    FROM volunteer_shift\n
+      \       GROUP BY volunteer_shift.date,\n        volunteer_shift.start,\n        volunteer_shift.\"end\",\n
+      \       volunteer_shift.hospital_id) vs_stat ON (\n            ((vs_stat.date
+      = (days.date)::date) AND\n             (vs_stat.start = period.start) AND\n
+      \            (vs_stat.\"end\" = period.\"end\") AND\n             vs_stat.hospital_id
+      = period.hospital_id)))\n  WHERE\n    CASE WHEN _hospital_id IS NULL\n      THEN
+      TRUE\n      ELSE period.hospital_id = _hospital_id\n    END AND\n    CASE WHEN
+      array_length(professions, 1) IS NULL\n      THEN TRUE\n      ELSE profession
+      = ANY(professions)\n    END\n  GROUP BY (days.date)::date, period.start, period.\"end\"\n
+      \ ORDER BY date, period.start;\n  $function$;"
+  type: run_sql

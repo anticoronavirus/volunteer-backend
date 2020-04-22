@@ -1,0 +1,23 @@
+- args:
+    role: volunteer
+    table:
+      name: period
+      schema: public
+  type: drop_select_permission
+- args:
+    permission:
+      allow_aggregations: false
+      columns:
+      - demand
+      - end
+      - hospital_id
+      - profession
+      - start
+      - uid
+      computed_fields: []
+      filter: {}
+    role: volunteer
+    table:
+      name: period
+      schema: public
+  type: create_select_permission
