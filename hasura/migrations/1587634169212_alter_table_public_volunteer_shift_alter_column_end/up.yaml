@@ -1,0 +1,10 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."volunteer_shift" ALTER COLUMN "end" TYPE timetz;
+  type: run_sql
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."volunteer_shift" ALTER COLUMN "end" DROP NOT NULL;
+  type: run_sql

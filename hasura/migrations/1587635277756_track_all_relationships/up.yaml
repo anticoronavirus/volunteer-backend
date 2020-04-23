@@ -1,0 +1,20 @@
+- args:
+    name: volunteer_shifts
+    table:
+      name: period_demand
+      schema: public
+    using:
+      foreign_key_constraint_on:
+        column: period_demand_id
+        table:
+          name: volunteer_shift
+          schema: public
+  type: create_array_relationship
+- args:
+    name: period_demand
+    table:
+      name: volunteer_shift
+      schema: public
+    using:
+      foreign_key_constraint_on: period_demand_id
+  type: create_object_relationship
