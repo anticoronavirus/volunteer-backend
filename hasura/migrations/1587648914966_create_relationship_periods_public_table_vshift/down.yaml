@@ -1,0 +1,6 @@
+- args:
+    relationship: periods
+    table:
+      name: vshift
+      schema: public
+  type: drop_relationship

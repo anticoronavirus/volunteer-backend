@@ -1,0 +1,14 @@
+- args:
+    name: periods
+    table:
+      name: vshift
+      schema: public
+    using:
+      manual_configuration:
+        column_mapping:
+          end: end
+          start: start
+        remote_table:
+          name: period
+          schema: public
+  type: create_array_relationship
