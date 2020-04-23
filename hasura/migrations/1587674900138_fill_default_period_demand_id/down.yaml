@@ -1,1 +1,7 @@
-[]
+- args:
+    cascade: false
+    read_only: false
+    sql: |-
+      update volunteer_shift set
+             period_demand_id = NULL;
+  type: run_sql
