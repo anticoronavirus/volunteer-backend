@@ -1,0 +1,16 @@
+- args:
+    permission:
+      allow_aggregations: false
+      columns:
+      - hospital_id
+      - coophone
+      - created_at
+      - updated_at
+      computed_fields: []
+      filter: {}
+      limit: null
+    role: voyeur
+    table:
+      name: hospital_coordinator
+      schema: public
+  type: create_select_permission
