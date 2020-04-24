@@ -13,5 +13,6 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
             cd volunteer-backend
+            git pull
             docker-compose pull
             docker-compose up -d
