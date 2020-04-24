@@ -29,7 +29,7 @@ services:
       - "graphql-engine"
 
   frontend:
-    image: docker.pkg.github.com/anticoronavirus/volunteer-frontend/volunteer-frontend:stable
+    image: docker.pkg.github.com/anticoronavirus/volunteer-frontend/volunteer-frontend:master
     restart: always
     labels:
       - "traefik.enable=true"
