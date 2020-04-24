@@ -1,0 +1,9 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: |-
+      delete from period_demand
+      using profession
+      where profession.name = 'Прачечная' and
+            profession.uid = profession_id;
+  type: run_sql
