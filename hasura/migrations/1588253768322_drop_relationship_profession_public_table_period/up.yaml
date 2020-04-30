@@ -1,0 +1,6 @@
+- args:
+    relationship: profession
+    table:
+      name: period
+      schema: public
+  type: drop_relationship

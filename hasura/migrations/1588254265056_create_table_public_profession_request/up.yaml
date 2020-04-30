@@ -1,0 +1,30 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: CREATE EXTENSION IF NOT EXISTS pgcrypto;
+  type: run_sql
+- args:
+    cascade: false
+    read_only: false
+    sql: "CREATE TABLE \"public\".\"profession_request\"(\"uid\" uuid NOT NULL DEFAULT
+      gen_random_uuid(), \"created_at\" timestamptz NOT NULL DEFAULT now(), \"updated_at\"
+      timestamptz NOT NULL DEFAULT now(), \"hospital_id\" uuid NOT NULL, \"volunteer_id\"
+      uuid NOT NULL, \"profession_id\" uuid NOT NULL, \"rejected\" boolean NOT NULL,
+      \"rejected_reason\" varchar NOT NULL, PRIMARY KEY (\"uid\") , FOREIGN KEY (\"volunteer_id\")
+      REFERENCES \"public\".\"volunteer\"(\"uid\") ON UPDATE restrict ON DELETE restrict,
+      FOREIGN KEY (\"profession_id\") REFERENCES \"public\".\"profession\"(\"uid\")
+      ON UPDATE restrict ON DELETE restrict, FOREIGN KEY (\"hospital_id\") REFERENCES
+      \"public\".\"hospital\"(\"uid\") ON UPDATE restrict ON DELETE restrict, UNIQUE
+      (\"uid\"), UNIQUE (\"profession_id\", \"hospital_id\", \"volunteer_id\"));\nCREATE
+      OR REPLACE FUNCTION \"public\".\"set_current_timestamp_updated_at\"()\nRETURNS
+      TRIGGER AS $$\nDECLARE\n  _new record;\nBEGIN\n  _new := NEW;\n  _new.\"updated_at\"
+      = NOW();\n  RETURN _new;\nEND;\n$$ LANGUAGE plpgsql;\nCREATE TRIGGER \"set_public_profession_request_updated_at\"\nBEFORE
+      UPDATE ON \"public\".\"profession_request\"\nFOR EACH ROW\nEXECUTE PROCEDURE
+      \"public\".\"set_current_timestamp_updated_at\"();\nCOMMENT ON TRIGGER \"set_public_profession_request_updated_at\"
+      ON \"public\".\"profession_request\" \nIS 'trigger to set value of column \"updated_at\"
+      to current timestamp on row update';"
+  type: run_sql
+- args:
+    name: profession_request
+    schema: public
+  type: add_existing_table_or_view

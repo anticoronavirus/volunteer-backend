@@ -1,0 +1,114 @@
+- args:
+    relationship: hospital_profession_requirements
+    table:
+      name: hospital
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: volunteer_hospital_requirements
+    table:
+      name: hospital
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: profession_requests
+    table:
+      name: hospital
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: hospital
+    table:
+      name: hospital_profession_requirement
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: profession
+    table:
+      name: hospital_profession_requirement
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: requirement
+    table:
+      name: hospital_profession_requirement
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: profession
+    table:
+      name: period
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: hospital_profession_requirements
+    table:
+      name: profession
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: profession_requests
+    table:
+      name: profession
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: hospital
+    table:
+      name: profession_request
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: profession
+    table:
+      name: profession_request
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: volunteer
+    table:
+      name: profession_request
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: hospital_profession_requirements
+    table:
+      name: requirement
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: volunteer_hospital_requirements
+    table:
+      name: requirement
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: volunteer_hospital_requirements
+    table:
+      name: volunteer
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: profession_requests
+    table:
+      name: volunteer
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: hospital
+    table:
+      name: volunteer_hospital_requirement
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: requirement
+    table:
+      name: volunteer_hospital_requirement
+      schema: public
+  type: drop_relationship
+- args:
+    relationship: volunteer
+    table:
+      name: volunteer_hospital_requirement
+      schema: public
+  type: drop_relationship
