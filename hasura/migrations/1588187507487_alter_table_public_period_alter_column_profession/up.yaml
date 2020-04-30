@@ -1,0 +1,6 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: |-
+      alter table "public"."period" rename column "profession" to "profession_id";
+  type: run_sql

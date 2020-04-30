@@ -1,0 +1,6 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: |-
+      select true;
+  type: run_sql
