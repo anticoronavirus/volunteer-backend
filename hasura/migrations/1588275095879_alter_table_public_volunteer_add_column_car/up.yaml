@@ -1,0 +1,5 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."volunteer" ADD COLUMN "car" varchar NULL;
+  type: run_sql

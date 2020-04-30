@@ -1,0 +1,40 @@
+- args:
+    role: volunteer
+    table:
+      name: volunteer
+      schema: public
+  type: drop_update_permission
+- args:
+    permission:
+      columns:
+      - comment
+      - email
+      - fname
+      - hospital_id
+      - is_hatching
+      - lname
+      - mname
+      - password
+      - phone
+      - profession
+      - role
+      - uid
+      filter:
+        _or:
+        - uid:
+            _eq: X-Hasura-User-Id
+        - volunteer_shifts:
+            hospital:
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
+      localPresets:
+      - key: ""
+        value: ""
+      set: {}
+    role: volunteer
+    table:
+      name: volunteer
+      schema: public
+  type: create_update_permission
