@@ -1,0 +1,12 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."profession_request" ALTER COLUMN "rejected_reason"
+      TYPE varchar;
+  type: run_sql
+- args:
+    cascade: false
+    read_only: false
+    sql: ALTER TABLE "public"."profession_request" ALTER COLUMN "rejected_reason"
+      DROP NOT NULL;
+  type: run_sql
