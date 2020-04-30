@@ -1,0 +1,20 @@
+- args:
+    permission:
+      columns:
+      - rejected
+      - rejected_reason
+      filter:
+        hospital:
+          hospital_coordinators:
+            coordinator:
+              uid:
+                _eq: X-Hasura-User-Id
+      localPresets:
+      - key: ""
+        value: ""
+      set: {}
+    role: volunteer
+    table:
+      name: profession_request
+      schema: public
+  type: create_update_permission

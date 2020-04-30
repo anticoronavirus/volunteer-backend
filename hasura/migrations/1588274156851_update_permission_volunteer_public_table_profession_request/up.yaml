@@ -1,0 +1,19 @@
+- args:
+    permission:
+      allow_upsert: true
+      check:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+      columns:
+      - hospital_id
+      - profession_id
+      - volunteer_id
+      localPresets:
+      - key: ""
+        value: ""
+      set: {}
+    role: volunteer
+    table:
+      name: profession_request
+      schema: public
+  type: create_insert_permission
