@@ -1,0 +1,30 @@
+- args:
+    role: voyeur
+    table:
+      name: volunteer_shift
+      schema: public
+  type: drop_select_permission
+- args:
+    permission:
+      allow_aggregations: false
+      columns:
+      - confirmed
+      - created_at
+      - date
+      - end
+      - hospital_id
+      - period_demand_id
+      - profession_id
+      - start
+      - uid
+      - updated_at
+      - volunteer_id
+      computed_fields: []
+      filter:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+    role: voyeur
+    table:
+      name: volunteer_shift
+      schema: public
+  type: create_select_permission

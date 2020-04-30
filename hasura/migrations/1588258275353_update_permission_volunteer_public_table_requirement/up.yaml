@@ -1,0 +1,17 @@
+- args:
+    permission:
+      allow_aggregations: false
+      columns:
+      - created_at
+      - description
+      - name
+      - uid
+      - updated_at
+      computed_fields: []
+      filter: {}
+      limit: null
+    role: volunteer
+    table:
+      name: requirement
+      schema: public
+  type: create_select_permission
