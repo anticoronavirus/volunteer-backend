@@ -1,0 +1,13 @@
+- args:
+    permission:
+      filter:
+        hospital:
+          hospital_coordinators:
+            coordinators:
+              uid:
+                _eq: X-Hasura-User-Id
+    role: volunteer
+    table:
+      name: hospital_profession_requirement
+      schema: public
+  type: create_delete_permission
