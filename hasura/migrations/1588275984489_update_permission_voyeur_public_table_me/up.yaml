@@ -1,0 +1,35 @@
+- args:
+    role: voyeur
+    table:
+      name: me
+      schema: public
+  type: drop_select_permission
+- args:
+    permission:
+      allow_aggregations: false
+      columns:
+      - car
+      - comment
+      - created_at
+      - email
+      - fname
+      - hospital_id
+      - is_hatching
+      - licenceplate
+      - lname
+      - mname
+      - password
+      - phone
+      - profession
+      - role
+      - uid
+      - updated_at
+      computed_fields: []
+      filter:
+        uid:
+          _is_null: true
+    role: voyeur
+    table:
+      name: me
+      schema: public
+  type: create_select_permission

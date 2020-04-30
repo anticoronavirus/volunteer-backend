@@ -1,0 +1,10 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: "CREATE OR REPLACE VIEW \"public\".\"me\" AS \n SELECT volunteer.uid,\n    volunteer.fname,\n
+      \   volunteer.mname,\n    volunteer.lname,\n    volunteer.phone,\n    volunteer.email,\n
+      \   volunteer.role,\n    volunteer.password,\n    volunteer.hospital_id,\n    volunteer.comment,\n
+      \   volunteer.created_at,\n    volunteer.updated_at,\n    volunteer.is_hatching,\n
+      \   volunteer.profession,\n    volunteer.car,\n    volunteer.licenceplate\n
+      \  FROM volunteer;"
+  type: run_sql
