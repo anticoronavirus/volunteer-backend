@@ -1,0 +1,25 @@
+- args:
+    permission:
+      allow_aggregations: false
+      columns:
+      - uid
+      - created_at
+      - requirement_id
+      - hospital_id
+      - volunteer_id
+      computed_fields: []
+      filter:
+        _or:
+        - volunteer_id:
+            _eq: X-Hasura-User-Id
+        - hospital:
+            hospital_coordinators:
+              coordinator:
+                uid:
+                  _eq: X-Hasura-User-Id
+      limit: null
+    role: volunteer
+    table:
+      name: volunteer_hospital_requirement
+      schema: public
+  type: create_select_permission

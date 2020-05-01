@@ -1,0 +1,6 @@
+- args:
+    relationship: satisfied
+    table:
+      name: hospital_profession_requirement
+      schema: public
+  type: drop_relationship
