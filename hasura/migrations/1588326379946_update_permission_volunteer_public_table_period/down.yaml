@@ -1,0 +1,29 @@
+- args:
+    role: volunteer
+    table:
+      name: period
+      schema: public
+  type: drop_insert_permission
+- args:
+    permission:
+      check:
+        hospital:
+          hospital_coordinators:
+            coordinators:
+              uid:
+                _eq: X-Hasura-User-Id
+      columns:
+      - demand
+      - end
+      - hospital_id
+      - profession_id
+      - start
+      localPresets:
+      - key: ""
+        value: ""
+      set: {}
+    role: volunteer
+    table:
+      name: period
+      schema: public
+  type: create_insert_permission
