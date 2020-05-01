@@ -1,0 +1,6 @@
+- args:
+    relationship: confirmedRequirements
+    table:
+      name: profession_request
+      schema: public
+  type: drop_relationship

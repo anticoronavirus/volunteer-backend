@@ -1,0 +1,14 @@
+- args:
+    name: confirmedRequirements
+    table:
+      name: profession_request
+      schema: public
+    using:
+      manual_configuration:
+        column_mapping:
+          hospital_id: hospital_id
+          volunteer_id: volunteer_id
+        remote_table:
+          name: volunteer_hospital_requirement
+          schema: public
+  type: create_array_relationship
