@@ -1,0 +1,6 @@
+- args:
+    role: volunteer
+    table:
+      name: volunteer_hospital_requirement
+      schema: public
+  type: drop_insert_permission
