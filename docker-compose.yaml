@@ -52,7 +52,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
 
   graphql-engine:
-    image: hasura/graphql-engine:v1.1.0
+    image: hasura/graphql-engine:v1.1.0.cli-migrations
     depends_on:
     - "postgres"
     expose:
@@ -76,7 +76,8 @@ services:
       HASURA_GRAPHQL_JWT_SECRET: ${JWT_SECRET}
       HASURA_GRAPHQL_ADMIN_SECRET: ${ADMIN_SECRET}
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "voyeur"
-      HASURA_GRAPHQL_MIGRATIONS_DIR: ./hasura/migrations
+    volumes:
+      - "./hasura/migrations:/hasura-migrations"
   auth:
     image: docker.pkg.github.com/anticoronavirus/volunteer-auth/volunteer-auth:master
     depends_on:
