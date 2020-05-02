@@ -1,0 +1,45 @@
+- args:
+    role: volunteer
+    table:
+      name: volunteer
+      schema: public
+  type: drop_select_permission
+- args:
+    permission:
+      allow_aggregations: false
+      columns:
+      - car
+      - comment
+      - email
+      - fname
+      - hospital_id
+      - is_hatching
+      - licenceplate
+      - lname
+      - mname
+      - password
+      - phone
+      - profession
+      - role
+      - uid
+      computed_fields: []
+      filter:
+        _or:
+        - uid:
+            _eq: X-Hasura-User-Id
+        - volunteer_shifts:
+            hospital:
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
+        - profession_requests:
+            hospital:
+              coordinators:
+                uid:
+                  _eq: X-Hasura-User-Id
+    role: volunteer
+    table:
+      name: volunteer
+      schema: public
+  type: create_select_permission
