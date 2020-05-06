@@ -1,0 +1,11 @@
+- function:
+    schema: public
+    name: shift_selector
+- function:
+    schema: public
+    name: shift_selector2
+- function:
+    schema: public
+    name: unseen_hint
+  configuration:
+    session_argument: hasura_session

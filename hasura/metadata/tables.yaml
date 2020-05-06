@@ -1,0 +1,1302 @@
+- table:
+    schema: public
+    name: blacklist
+  object_relationships:
+  - name: volunteer
+    using:
+      foreign_key_constraint_on: volunteer_id
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        _exists:
+          _where:
+            hospital_coordinators:
+              coordinator:
+                uid:
+                  _eq: X-Hasura-User-Id
+          _table:
+            schema: public
+            name: hospital
+      columns:
+      - comment
+      - volunteer_id
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - comment
+      - created_at
+      - updated_at
+      - uid
+      - volunteer_id
+      filter:
+        _exists:
+          _where:
+            hospital_coordinators:
+              coordinator:
+                uid:
+                  _eq: X-Hasura-User-Id
+          _table:
+            schema: public
+            name: hospital
+- table:
+    schema: public
+    name: coordinator_hospitals_view
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - coophone
+      - uid
+      - name
+      - shortname
+      - phone
+      - address
+      filter: {}
+  - role: voyeur
+    permission:
+      columns:
+      - coophone
+      - uid
+      - name
+      - shortname
+      - phone
+      - address
+      filter: {}
+- table:
+    schema: public
+    name: hint
+  array_relationships:
+  - name: seen_hints
+    using:
+      foreign_key_constraint_on:
+        column: hint_id
+        table:
+          schema: public
+          name: seen_hint
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - uid
+      - text
+      - name
+      filter:
+        _not:
+          seen_hints:
+            user_id:
+              _eq: X-Hasura-User-Id
+  - role: voyeur
+    permission:
+      columns:
+      - uid
+      - text
+      - name
+      filter:
+        _exists:
+          _where: {}
+          _table:
+            schema: public
+            name: me
+- table:
+    schema: public
+    name: hospital
+  object_relationships:
+  - name: coordinator
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: volunteer
+        column_mapping:
+          phone: phone
+  array_relationships:
+  - name: coordinators
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: volunteer
+  - name: hospital_coordinators
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: hospital_coordinator
+  - name: hospital_profession_requirements
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: hospital_profession_requirement
+  - name: periods
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: period
+  - name: profession_requests
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: profession_request
+  - name: provisioned_documents
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: provisioned_document
+  - name: special_shifts
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: special_shift
+  - name: volunteer_hospital_requirements
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: volunteer_hospital_requirement
+  - name: volunteer_shifts
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: volunteer_shift
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - address
+      - directions
+      - inn
+      - name
+      - phone
+      - shortname
+      - uid
+      filter: {}
+  - role: voyeur
+    permission:
+      columns:
+      - address
+      - directions
+      - inn
+      - name
+      - phone
+      - shortname
+      - uid
+      filter: {}
+  update_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - directions
+      - shortname
+      filter:
+        hospital_coordinators:
+          coordinators:
+            uid:
+              _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: hospital_coordinator
+  configuration:
+    custom_root_fields: {}
+    custom_column_names:
+      coophone: coophone
+  object_relationships:
+  - name: coordinator
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: volunteer
+        column_mapping:
+          coophone: phone
+  - name: hospital
+    using:
+      foreign_key_constraint_on: hospital_id
+  array_relationships:
+  - name: coordinators
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: volunteer
+        column_mapping:
+          coophone: phone
+  - name: hospitals
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: hospital
+        column_mapping:
+          hospital_id: uid
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - coophone
+      - hospital_id
+      filter:
+        coordinators:
+          uid:
+            _eq: X-Hasura-User-Id
+      allow_aggregations: true
+  - role: voyeur
+    permission:
+      columns:
+      - hospital_id
+      - coophone
+      - created_at
+      - updated_at
+      filter: {}
+      allow_aggregations: true
+- table:
+    schema: public
+    name: hospital_coordinators_view
+- table:
+    schema: public
+    name: hospital_profession_requirement
+  object_relationships:
+  - name: hospital
+    using:
+      foreign_key_constraint_on: hospital_id
+  - name: profession
+    using:
+      foreign_key_constraint_on: profession_id
+  - name: requirement
+    using:
+      foreign_key_constraint_on: requirement_id
+  array_relationships:
+  - name: satisfied
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: volunteer_hospital_requirement
+        column_mapping:
+          requirement_id: requirement_id
+          hospital_id: hospital_id
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        hospital:
+          hospital_coordinators:
+            coordinators:
+              uid:
+                _eq: X-Hasura-User-Id
+      columns:
+      - hospital_id
+      - profession_id
+      - requirement_id
+      - uid
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - created_at
+      - hospital_id
+      - profession_id
+      - requirement_id
+      - uid
+      filter: {}
+  - role: voyeur
+    permission:
+      columns:
+      - created_at
+      - hospital_id
+      - profession_id
+      - requirement_id
+      - uid
+      filter: {}
+  delete_permissions:
+  - role: volunteer
+    permission:
+      filter:
+        hospital:
+          hospital_coordinators:
+            coordinators:
+              uid:
+                _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: me
+  object_relationships:
+  - name: managedHospital
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: coordinator_hospitals_view
+        column_mapping:
+          phone: coophone
+  array_relationships:
+  - name: managedHospitals
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: hospital_coordinator
+        column_mapping:
+          phone: coophone
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - car
+      - comment
+      - created_at
+      - email
+      - fname
+      - hospital_id
+      - is_hatching
+      - licenceplate
+      - lname
+      - mname
+      - password
+      - phone
+      - profession
+      - role
+      - uid
+      - updated_at
+      filter:
+        uid:
+          _eq: X-Hasura-User-Id
+  - role: voyeur
+    permission:
+      columns:
+      - car
+      - comment
+      - created_at
+      - email
+      - fname
+      - hospital_id
+      - is_hatching
+      - licenceplate
+      - lname
+      - mname
+      - password
+      - phone
+      - profession
+      - role
+      - uid
+      - updated_at
+      filter:
+        uid:
+          _is_null: true
+- table:
+    schema: public
+    name: page
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        _exists:
+          _where:
+            coordinator:
+              uid:
+                _eq: X-Hasura-User-Id
+          _table:
+            schema: public
+            name: hospital_coordinator
+      columns:
+      - content
+      - name
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - uid
+      - created_at
+      - updated_at
+      - name
+      - content
+      filter: {}
+  - role: voyeur
+    permission:
+      columns:
+      - uid
+      - created_at
+      - updated_at
+      - name
+      - content
+      filter: {}
+- table:
+    schema: public
+    name: period
+  object_relationships:
+  - name: hospital
+    using:
+      foreign_key_constraint_on: hospital_id
+  - name: profession
+    using:
+      foreign_key_constraint_on: profession_id
+  array_relationships:
+  - name: period_demands
+    using:
+      foreign_key_constraint_on:
+        column: period_id
+        table:
+          schema: public
+          name: period_demand
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        hospital:
+          hospital_coordinators:
+            coordinators:
+              uid:
+                _eq: X-Hasura-User-Id
+      columns:
+      - demand
+      - end
+      - hospital_id
+      - notabene
+      - profession_id
+      - start
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - demand
+      - end
+      - hospital_id
+      - notabene
+      - profession_id
+      - start
+      - uid
+      filter: {}
+  - role: voyeur
+    permission:
+      columns:
+      - demand
+      - end
+      - hospital_id
+      - notabene
+      - profession_id
+      - start
+      - uid
+      filter: {}
+  update_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - demand
+      - end
+      - notabene
+      - profession_id
+      - start
+      - uid
+      filter:
+        hospital:
+          hospital_coordinators:
+            coordinators:
+              uid:
+                _eq: X-Hasura-User-Id
+  delete_permissions:
+  - role: volunteer
+    permission:
+      filter:
+        hospital:
+          hospital_coordinators:
+            coordinator:
+              uid:
+                _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: period_demand
+  object_relationships:
+  - name: period
+    using:
+      foreign_key_constraint_on: period_id
+  - name: profession
+    using:
+      foreign_key_constraint_on: profession_id
+  array_relationships:
+  - name: volunteer_shifts
+    using:
+      foreign_key_constraint_on:
+        column: period_demand_id
+        table:
+          schema: public
+          name: volunteer_shift
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        period:
+          hospital:
+            hospital_coordinators:
+              coordinators:
+                uid:
+                  _eq: X-Hasura-User-Id
+      columns:
+      - demand
+      - notabene
+      - period_id
+      - profession_id
+      - uid
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - demand
+      - notabene
+      - period_id
+      - profession_id
+      - uid
+      filter: {}
+  - role: voyeur
+    permission:
+      columns:
+      - demand
+      - notabene
+      - period_id
+      - profession_id
+      - uid
+      filter: {}
+  update_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - demand
+      - notabene
+      - period_id
+      - profession_id
+      filter:
+        period:
+          hospital:
+            hospital_coordinators:
+              coordinators:
+                uid:
+                  _eq: X-Hasura-User-Id
+  delete_permissions:
+  - role: volunteer
+    permission:
+      filter:
+        period:
+          hospital:
+            hospital_coordinators:
+              coordinators:
+                uid:
+                  _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: profession
+  array_relationships:
+  - name: hospital_profession_requirements
+    using:
+      foreign_key_constraint_on:
+        column: profession_id
+        table:
+          schema: public
+          name: hospital_profession_requirement
+  - name: period_demands
+    using:
+      foreign_key_constraint_on:
+        column: profession_id
+        table:
+          schema: public
+          name: period_demand
+  - name: periods
+    using:
+      foreign_key_constraint_on:
+        column: profession_id
+        table:
+          schema: public
+          name: period
+  - name: profession_requests
+    using:
+      foreign_key_constraint_on:
+        column: profession_id
+        table:
+          schema: public
+          name: profession_request
+  - name: volunteer_professions
+    using:
+      foreign_key_constraint_on:
+        column: profession_id
+        table:
+          schema: public
+          name: volunteer_profession
+  - name: volunteer_shifts
+    using:
+      foreign_key_constraint_on:
+        column: profession_id
+        table:
+          schema: public
+          name: volunteer_shift
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - name
+      - description
+      - uid
+      - dangerous
+      - requirements
+      filter: {}
+      allow_aggregations: true
+  - role: voyeur
+    permission:
+      columns:
+      - dangerous
+      - description
+      - name
+      - requirements
+      - uid
+      filter: {}
+- table:
+    schema: public
+    name: profession_request
+  object_relationships:
+  - name: hospital
+    using:
+      foreign_key_constraint_on: hospital_id
+  - name: profession
+    using:
+      foreign_key_constraint_on: profession_id
+  - name: volunteer
+    using:
+      foreign_key_constraint_on: volunteer_id
+  array_relationships:
+  - name: confirmedRequirements
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: volunteer_hospital_requirement
+        column_mapping:
+          volunteer_id: volunteer_id
+          hospital_id: hospital_id
+  - name: requirements
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: hospital_profession_requirement
+        column_mapping:
+          profession_id: profession_id
+          hospital_id: hospital_id
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+      columns:
+      - hospital_id
+      - profession_id
+      - volunteer_id
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - uid
+      - created_at
+      - updated_at
+      - hospital_id
+      - volunteer_id
+      - profession_id
+      - rejected
+      - rejected_reason
+      filter:
+        _or:
+        - volunteer_id:
+            _eq: X-Hasura-User-Id
+        - hospital:
+            hospital_coordinators:
+              coordinator:
+                uid:
+                  _eq: X-Hasura-User-Id
+  update_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - rejected
+      - rejected_reason
+      filter:
+        hospital:
+          hospital_coordinators:
+            coordinator:
+              uid:
+                _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: provisioned_document
+  object_relationships:
+  - name: hospital
+    using:
+      foreign_key_constraint_on: hospital_id
+  - name: volunteer
+    using:
+      foreign_key_constraint_on: volunteer_id
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        hospital:
+          hospital_coordinators:
+            coordinator:
+              uid:
+                _eq: X-Hasura-User-Id
+      columns:
+      - hospital_id
+      - volunteer_id
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - hospital_id
+      - created_at
+      - volunteer_id
+      - uid
+      filter:
+        _or:
+        - volunteer_id:
+            _eq: X-Hasura-User-Id
+        - hospital:
+            hospital_coordinators:
+              coordinator:
+                uid:
+                  _eq: X-Hasura-User-Id
+      allow_aggregations: true
+  - role: voyeur
+    permission:
+      columns: []
+      filter: {}
+      allow_aggregations: true
+- table:
+    schema: public
+    name: requirement
+  array_relationships:
+  - name: hospital_profession_requirements
+    using:
+      foreign_key_constraint_on:
+        column: requirement_id
+        table:
+          schema: public
+          name: hospital_profession_requirement
+  - name: volunteer_hospital_requirements
+    using:
+      foreign_key_constraint_on:
+        column: requirement_id
+        table:
+          schema: public
+          name: volunteer_hospital_requirement
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - created_at
+      - description
+      - name
+      - uid
+      - updated_at
+      filter: {}
+  - role: voyeur
+    permission:
+      columns:
+      - created_at
+      - updated_at
+      - uid
+      - description
+      - name
+      filter: {}
+- table:
+    schema: public
+    name: role
+- table:
+    schema: public
+    name: seen_hint
+  object_relationships:
+  - name: hint
+    using:
+      foreign_key_constraint_on: hint_id
+  - name: volunteer
+    using:
+      foreign_key_constraint_on: user_id
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        user_id:
+          _eq: X-Hasura-User-Id
+      columns:
+      - hint_id
+      - user_id
+- table:
+    schema: public
+    name: special_shift
+  object_relationships:
+  - name: hospital
+    using:
+      foreign_key_constraint_on: hospital_id
+  select_permissions:
+  - role: voyeur
+    permission:
+      columns:
+      - date
+      - demand
+      - end
+      - hospital_id
+      - start
+      filter: {}
+- table:
+    schema: public
+    name: volunteer
+  object_relationships:
+  - name: hospital
+    using:
+      foreign_key_constraint_on: hospital_id
+  - name: managedHospital
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: coordinator_hospitals_view
+        column_mapping:
+          phone: coophone
+  array_relationships:
+  - name: blacklists
+    using:
+      foreign_key_constraint_on:
+        column: volunteer_id
+        table:
+          schema: public
+          name: blacklist
+  - name: managedHospitals
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: hospital_coordinator
+        column_mapping:
+          phone: coophone
+  - name: profession_requests
+    using:
+      foreign_key_constraint_on:
+        column: volunteer_id
+        table:
+          schema: public
+          name: profession_request
+  - name: provisioned_documents
+    using:
+      foreign_key_constraint_on:
+        column: volunteer_id
+        table:
+          schema: public
+          name: provisioned_document
+  - name: seen_hints
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: seen_hint
+  - name: volunteer_hospital_requirements
+    using:
+      foreign_key_constraint_on:
+        column: volunteer_id
+        table:
+          schema: public
+          name: volunteer_hospital_requirement
+  - name: volunteer_professions
+    using:
+      foreign_key_constraint_on:
+        column: volunteer_id
+        table:
+          schema: public
+          name: volunteer_profession
+  - name: volunteer_shifts
+    using:
+      foreign_key_constraint_on:
+        column: volunteer_id
+        table:
+          schema: public
+          name: volunteer_shift
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - car
+      - comment
+      - email
+      - fname
+      - hospital_id
+      - is_hatching
+      - licenceplate
+      - lname
+      - mname
+      - password
+      - phone
+      - profession
+      - role
+      - uid
+      filter:
+        _or:
+        - uid:
+            _eq: X-Hasura-User-Id
+        - volunteer_shifts:
+            hospital:
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
+        - profession_requests:
+            hospital:
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
+  - role: voyeur
+    permission:
+      columns:
+      - fname
+      - lname
+      - mname
+      - phone
+      - profession
+      - role
+      - uid
+      filter: {}
+  update_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - car
+      - comment
+      - email
+      - fname
+      - hospital_id
+      - is_hatching
+      - licenceplate
+      - lname
+      - mname
+      - password
+      - phone
+      - profession
+      - role
+      - uid
+      filter:
+        _or:
+        - uid:
+            _eq: X-Hasura-User-Id
+        - volunteer_shifts:
+            hospital:
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: volunteer_hospital_requirement
+  object_relationships:
+  - name: hospital
+    using:
+      foreign_key_constraint_on: hospital_id
+  - name: requirement
+    using:
+      foreign_key_constraint_on: requirement_id
+  - name: volunteer
+    using:
+      foreign_key_constraint_on: volunteer_id
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        hospital:
+          hospital_coordinators:
+            coordinators:
+              uid:
+                _eq: X-Hasura-User-Id
+      columns:
+      - hospital_id
+      - requirement_id
+      - volunteer_id
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - uid
+      - created_at
+      - requirement_id
+      - hospital_id
+      - volunteer_id
+      filter:
+        _or:
+        - volunteer_id:
+            _eq: X-Hasura-User-Id
+        - hospital:
+            hospital_coordinators:
+              coordinator:
+                uid:
+                  _eq: X-Hasura-User-Id
+  - role: voyeur
+    permission:
+      columns:
+      - uid
+      - created_at
+      - requirement_id
+      - hospital_id
+      - volunteer_id
+      filter:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+  delete_permissions:
+  - role: volunteer
+    permission:
+      filter:
+        hospital:
+          hospital_coordinators:
+            coordinators:
+              uid:
+                _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: volunteer_profession
+  object_relationships:
+  - name: profession
+    using:
+      foreign_key_constraint_on: profession_id
+  - name: volunteer
+    using:
+      foreign_key_constraint_on: volunteer_id
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+      columns:
+      - profession_id
+      - volunteer_id
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - profession_id
+      - uuid
+      - volunteer_id
+      filter:
+        _or:
+        - volunteer_id:
+            _eq: X-Hasura-User-Id
+        - _exists:
+            _where:
+              coordinators:
+                uid:
+                  _eq: X-Hasura-User-Id
+            _table:
+              schema: public
+              name: hospital_coordinator
+  update_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - profession_id
+      - volunteer_id
+      filter:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+  delete_permissions:
+  - role: volunteer
+    permission:
+      filter:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: volunteer_shift
+  object_relationships:
+  - name: hospital
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: hospital
+        column_mapping:
+          hospital_id: uid
+  - name: period_demand
+    using:
+      foreign_key_constraint_on: period_demand_id
+  - name: profession
+    using:
+      foreign_key_constraint_on: profession_id
+  - name: volunteer
+    using:
+      foreign_key_constraint_on: volunteer_id
+  insert_permissions:
+  - role: volunteer
+    permission:
+      check:
+        _and:
+        - _or:
+          - volunteer_id:
+              _eq: X-Hasura-User-Id
+          - hospital:
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
+        - _not:
+            _exists:
+              _where:
+                volunteer_id:
+                  _eq: X-Hasura-User-Id
+              _table:
+                schema: public
+                name: blacklist
+      columns:
+      - confirmed
+      - date
+      - end
+      - hospital_id
+      - period_demand_id
+      - profession_id
+      - start
+      - uid
+      - volunteer_id
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - confirmed
+      - date
+      - end
+      - hospital_id
+      - period_demand_id
+      - profession_id
+      - start
+      - uid
+      - volunteer_id
+      filter:
+        _and:
+        - _or:
+          - volunteer_id:
+              _eq: X-Hasura-User-Id
+          - hospital:
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
+        - _not:
+            _exists:
+              _where:
+                volunteer_id:
+                  _eq: X-Hasura-User-Id
+              _table:
+                schema: public
+                name: blacklist
+      allow_aggregations: true
+  - role: voyeur
+    permission:
+      columns:
+      - confirmed
+      - created_at
+      - date
+      - end
+      - hospital_id
+      - period_demand_id
+      - profession_id
+      - start
+      - uid
+      - updated_at
+      - volunteer_id
+      filter:
+        volunteer_id:
+          _eq: X-Hasura-User-Id
+  update_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - confirmed
+      filter:
+        hospital:
+          hospital_coordinators:
+            coordinator:
+              uid:
+                _eq: X-Hasura-User-Id
+  delete_permissions:
+  - role: volunteer
+    permission:
+      filter:
+        _and:
+        - _or:
+          - volunteer_id:
+              _eq: X-Hasura-User-Id
+          - hospital:
+              hospital_coordinators:
+                coordinator:
+                  uid:
+                    _eq: X-Hasura-User-Id
+        - _not:
+            _exists:
+              _where:
+                volunteer_id:
+                  _eq: X-Hasura-User-Id
+              _table:
+                schema: public
+                name: blacklist
+- table:
+    schema: public
+    name: vshift
+  array_relationships:
+  - name: periods
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: period
+        column_mapping:
+          start: start
+          end: end
+  - name: shiftRequests
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: volunteer_shift
+        column_mapping:
+          start: start
+          date: date
+          end: end
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - date
+      - start
+      - end
+      - hospitalscount
+      - demand
+      - placesavailable
+      - uid
+      filter: {}
+  - role: voyeur
+    permission:
+      columns:
+      - date
+      - demand
+      - hospitalscount
+      - placesavailable
+      - end
+      - start
+      - uid
+      filter: {}
