@@ -1,5 +1,0 @@
-- args:
-    cascade: false
-    read_only: false
-    sql: alter table "public"."volunteer_shift" drop constraint "volunteer_shift_period_demand_id_fkey";
-  type: run_sql

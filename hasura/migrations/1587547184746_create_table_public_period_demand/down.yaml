@@ -1,5 +1,0 @@
-- args:
-    cascade: false
-    read_only: false
-    sql: DROP TABLE "public"."period_demand";
-  type: run_sql

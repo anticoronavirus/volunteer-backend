@@ -1,5 +1,0 @@
-- args:
-    cascade: false
-    read_only: false
-    sql: DROP TABLE "public"."volunteer_hospital_requirement";
-  type: run_sql

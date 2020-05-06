@@ -1,0 +1,3 @@
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE TABLE "public"."period_demand"("uid" uuid NOT NULL DEFAULT gen_random_uuid(), "period_id" uuid NOT NULL, "profession_id" uuid NOT NULL, "demand" integer NOT NULL, PRIMARY KEY ("uid") , FOREIGN KEY ("period_id") REFERENCES "public"."period"("uid") ON UPDATE cascade ON DELETE cascade, FOREIGN KEY ("profession_id") REFERENCES "public"."profession"("uid") ON UPDATE cascade ON DELETE cascade, UNIQUE ("uid"));

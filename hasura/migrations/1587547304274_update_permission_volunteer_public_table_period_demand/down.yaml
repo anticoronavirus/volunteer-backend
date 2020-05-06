@@ -1,6 +1,0 @@
-- args:
-    role: volunteer
-    table:
-      name: period_demand
-      schema: public
-  type: drop_insert_permission

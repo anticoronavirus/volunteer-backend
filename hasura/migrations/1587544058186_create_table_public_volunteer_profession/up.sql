@@ -1,0 +1,3 @@
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE TABLE "public"."volunteer_profession"("uuid" uuid NOT NULL DEFAULT gen_random_uuid(), "volunteer_id" uuid NOT NULL, "profession_id" uuid NOT NULL, PRIMARY KEY ("uuid") , FOREIGN KEY ("volunteer_id") REFERENCES "public"."volunteer"("uid") ON UPDATE cascade ON DELETE cascade, FOREIGN KEY ("profession_id") REFERENCES "public"."profession"("uid") ON UPDATE cascade ON DELETE cascade, UNIQUE ("uuid"));

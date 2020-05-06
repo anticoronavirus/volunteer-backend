@@ -1,6 +1,0 @@
-- args:
-    role: voyeur
-    table:
-      name: hospital_coordinator
-      schema: public
-  type: drop_select_permission

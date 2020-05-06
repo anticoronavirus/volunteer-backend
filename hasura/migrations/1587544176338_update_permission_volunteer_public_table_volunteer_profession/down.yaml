@@ -1,6 +1,0 @@
-- args:
-    role: volunteer
-    table:
-      name: volunteer_profession
-      schema: public
-  type: drop_delete_permission
