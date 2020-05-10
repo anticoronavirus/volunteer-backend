@@ -1,3 +1,4 @@
+version: 2
 endpoint: https://dev.memedic.ru
 metadata_directory: metadata
 version: 2
