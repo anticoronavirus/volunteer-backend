@@ -1,7 +1,0 @@
-- args:
-    name: profession
-    new_name: professionByProfession
-    table:
-      name: period
-      schema: public
-  type: rename_relationship

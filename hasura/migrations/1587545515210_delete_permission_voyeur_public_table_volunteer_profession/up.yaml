@@ -1,6 +1,0 @@
-- args:
-    role: voyeur
-    table:
-      name: volunteer_profession
-      schema: public
-  type: drop_select_permission

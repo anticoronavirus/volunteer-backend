@@ -1,8 +1,0 @@
-- args:
-    name: profession
-    table:
-      name: period
-      schema: public
-    using:
-      foreign_key_constraint_on: profession_id
-  type: create_object_relationship

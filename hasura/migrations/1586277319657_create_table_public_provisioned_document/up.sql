@@ -1,0 +1,3 @@
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE TABLE "public"."provisioned_document"("hospital_id" uuid NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), "volunteer_id" uuid NOT NULL, "uid" uuid NOT NULL DEFAULT gen_random_uuid(), PRIMARY KEY ("uid") , FOREIGN KEY ("hospital_id") REFERENCES "public"."hospital"("uid") ON UPDATE restrict ON DELETE restrict, FOREIGN KEY ("volunteer_id") REFERENCES "public"."volunteer"("uid") ON UPDATE restrict ON DELETE restrict, UNIQUE ("hospital_id", "volunteer_id"));

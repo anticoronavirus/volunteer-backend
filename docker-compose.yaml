@@ -52,7 +52,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
 
   graphql-engine:
-    image: hasura/graphql-engine:v1.1.0.cli-migrations
+    image: hasura/graphql-engine:v1.2.0.cli-migrations
     depends_on:
     - "postgres"
     expose:

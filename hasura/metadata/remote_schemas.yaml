@@ -1,0 +1,5 @@
+- name: auth
+  definition:
+    url: http://auth:8000/
+    timeout_seconds: 60
+    forward_client_headers: true
