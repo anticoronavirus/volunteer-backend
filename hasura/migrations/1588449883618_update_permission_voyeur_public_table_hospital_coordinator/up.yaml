@@ -1,0 +1,21 @@
+- args:
+    role: voyeur
+    table:
+      name: hospital_coordinator
+      schema: public
+  type: drop_select_permission
+- args:
+    permission:
+      allow_aggregations: true
+      columns:
+      - hospital_id
+      - coophone
+      - created_at
+      - updated_at
+      computed_fields: []
+      filter: {}
+    role: voyeur
+    table:
+      name: hospital_coordinator
+      schema: public
+  type: create_select_permission
