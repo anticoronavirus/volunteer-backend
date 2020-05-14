@@ -455,6 +455,15 @@
         table:
           schema: public
           name: period_demand
+  - name: requirements
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: hospital_profession_requirement
+        column_mapping:
+          profession_id: profession_id
+          hospital_id: hospital_id
   insert_permissions:
   - role: volunteer
     permission:
