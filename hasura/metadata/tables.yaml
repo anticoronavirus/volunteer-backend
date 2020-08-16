@@ -40,30 +40,30 @@
           _table:
             schema: public
             name: hospital
-- table:
-    schema: public
-    name: coordinator_hospitals_view
-  select_permissions:
-  - role: volunteer
-    permission:
-      columns:
-      - coophone
-      - uid
-      - name
-      - shortname
-      - phone
-      - address
-      filter: {}
-  - role: voyeur
-    permission:
-      columns:
-      - coophone
-      - uid
-      - name
-      - shortname
-      - phone
-      - address
-      filter: {}
+# - table:
+#     schema: public
+#     name: coordinator_hospitals_view
+#   select_permissions:
+#   - role: volunteer
+#     permission:
+#       columns:
+#       - coophone
+#       - uid
+#       - name
+#       - shortname
+#       - phone
+#       - address
+#       filter: {}
+#   - role: voyeur
+#     permission:
+#       columns:
+#       - coophone
+#       - uid
+#       - name
+#       - shortname
+#       - phone
+#       - address
+#       filter: {}
 - table:
     schema: public
     name: hint
@@ -266,9 +266,9 @@
       - updated_at
       filter: {}
       allow_aggregations: true
-- table:
-    schema: public
-    name: hospital_coordinators_view
+# - table:
+#     schema: public
+#     name: hospital_coordinators_view
 - table:
     schema: public
     name: hospital_profession_requirement
@@ -337,15 +337,15 @@
 - table:
     schema: public
     name: me
-  object_relationships:
-  - name: managedHospital
-    using:
-      manual_configuration:
-        remote_table:
-          schema: public
-          name: coordinator_hospitals_view
-        column_mapping:
-          phone: coophone
+  # object_relationships:
+  # - name: managedHospital
+  #   using:
+  #     manual_configuration:
+  #       remote_table:
+  #         schema: public
+  #         name: coordinator_hospitals_view
+  #       column_mapping:
+  #         phone: coophone
   array_relationships:
   - name: managedHospitals
     using:
@@ -878,14 +878,14 @@
   - name: hospital
     using:
       foreign_key_constraint_on: hospital_id
-  - name: managedHospital
-    using:
-      manual_configuration:
-        remote_table:
-          schema: public
-          name: coordinator_hospitals_view
-        column_mapping:
-          phone: coophone
+  # - name: managedHospital
+  #   using:
+  #     manual_configuration:
+  #       remote_table:
+  #         schema: public
+  #         name: coordinator_hospitals_view
+  #       column_mapping:
+  #         phone: coophone
   array_relationships:
   - name: blacklists
     using:
