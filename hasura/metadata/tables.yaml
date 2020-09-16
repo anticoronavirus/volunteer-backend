@@ -265,6 +265,15 @@
         column_mapping:
           requirement_id: requirement_id
           hospital_id: hospital_id
+  computed_fields:
+  - name: is_satisfied
+    definition:
+      function:
+        schema: public
+        name: check_if_satisfied
+      table_argument: "hpr_row"
+      session_argument: "hasura_session"
+    comment: ""
   insert_permissions:
   - role: volunteer
     permission:
@@ -288,6 +297,8 @@
       - profession_id
       - requirement_id
       - uid
+      computed_fields:
+      - is_satisfied
       filter: {}
   - role: voyeur
     permission:
@@ -297,6 +308,8 @@
       - profession_id
       - requirement_id
       - uid
+      computed_fields:
+      - is_satisfied
       filter: {}
   delete_permissions:
   - role: volunteer
