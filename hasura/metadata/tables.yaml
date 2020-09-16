@@ -1153,6 +1153,7 @@
       - date
       - end
       - hospital_id
+      - is_cancelled
       - period_demand_id
       - profession_id
       - start
@@ -1185,6 +1186,7 @@
       - date
       - end
       - hospital_id
+      - is_cancelled
       - period_demand_id
       - profession_id
       - start
@@ -1199,6 +1201,7 @@
     permission:
       columns:
       - confirmed
+      - is_cancelled
       filter:
         hospital:
           hospital_coordinators:
