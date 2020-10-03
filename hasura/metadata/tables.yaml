@@ -274,8 +274,8 @@
       function:
         schema: public
         name: check_if_satisfied
-        table_argument: hpr_row
-        session_argument: hasura_session
+      session_argument: hasura_session
+      table_argument: hpr_row
     comment: ""
   insert_permissions:
   - role: volunteer
@@ -1007,11 +1007,14 @@
   - role: volunteer
     permission:
       check:
-        hospital:
-          hospital_coordinators:
-            coordinators:
-              uid:
-                _eq: X-Hasura-User-Id
+        _or:
+        - hospital:
+            hospital_coordinators:
+              coordinators:
+                uid:
+                  _eq: X-Hasura-User-Id
+        - volunteer_id:
+            _eq: X-Hasura-User-Id
       columns:
       - hospital_id
       - requirement_id
