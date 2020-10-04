@@ -692,10 +692,11 @@
       check:
         volunteer_id:
           _eq: X-Hasura-User-Id
+      set:
+        volunteer_id: x-hasura-User-Id
       columns:
       - hospital_id
       - profession_id
-      - volunteer_id
   select_permissions:
   - role: volunteer
     permission:
