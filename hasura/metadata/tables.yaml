@@ -262,6 +262,16 @@
   - name: profession
     using:
       foreign_key_constraint_on: profession_id
+  array_relationships:
+  - name: requirements
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: hospital_profession_requirement
+        column_mapping:
+          profession_id: profession_id
+          hospital_id: hospital_id
   select_permissions:
   - role: volunteer
     permission:
