@@ -245,9 +245,13 @@
       - coophone
       - hospital_id
       filter:
-        coordinators:
-          uid:
-            _eq: X-Hasura-User-Id
+        _and:
+        - coordinators:
+            uid:
+              _eq: X-Hasura-User-Id
+        - hospital:
+            active:
+              _eq: true
       allow_aggregations: true
   - role: voyeur
     permission:
