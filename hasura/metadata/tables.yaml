@@ -112,6 +112,13 @@
         table:
           schema: public
           name: hospital_profession_requirement
+  - name: hospital_professions
+    using:
+      foreign_key_constraint_on:
+        column: hospital_id
+        table:
+          schema: public
+          name: hospital_profession
   - name: periods
     using:
       foreign_key_constraint_on:
@@ -245,6 +252,29 @@
       - updated_at
       filter: {}
       allow_aggregations: true
+- table:
+    schema: public
+    name: hospital_profession
+  object_relationships:
+  - name: hospital
+    using:
+      foreign_key_constraint_on: hospital_id
+  - name: profession
+    using:
+      foreign_key_constraint_on: profession_id
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - hospital_id
+      - profession_id
+      filter: {}
+  - role: voyeur
+    permission:
+      columns:
+      - hospital_id
+      - profession_id
+      filter: {}
 - table:
     schema: public
     name: hospital_profession_requirement
@@ -599,6 +629,13 @@
         table:
           schema: public
           name: hospital_profession_requirement
+  - name: hospital_professions
+    using:
+      foreign_key_constraint_on:
+        column: profession_id
+        table:
+          schema: public
+          name: hospital_profession
   - name: period_demands
     using:
       foreign_key_constraint_on:
