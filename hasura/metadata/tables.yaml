@@ -174,7 +174,8 @@
       - settlement
       - shortname
       - uid
-      filter: {}
+      filter:
+        active: true
   - role: voyeur
     permission:
       columns:
@@ -187,7 +188,8 @@
       - settlement
       - shortname
       - uid
-      filter: {}
+      filter:
+        active: true
   update_permissions:
   - role: volunteer
     permission:
