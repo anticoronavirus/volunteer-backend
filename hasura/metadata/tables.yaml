@@ -801,6 +801,7 @@
       - created_at
       - description
       - name
+      - protected
       - uid
       - updated_at
       filter: {}
@@ -808,10 +809,11 @@
     permission:
       columns:
       - created_at
-      - updated_at
-      - uid
       - description
       - name
+      - protected
+      - uid
+      - updated_at
       filter: {}
 - table:
     schema: public
