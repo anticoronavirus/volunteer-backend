@@ -266,12 +266,14 @@
   - role: volunteer
     permission:
       columns:
+      - default
       - hospital_id
       - profession_id
       filter: {}
   - role: voyeur
     permission:
       columns:
+      - default
       - hospital_id
       - profession_id
       filter: {}
@@ -282,6 +284,15 @@
   - name: hospital
     using:
       foreign_key_constraint_on: hospital_id
+  - name: hospital_profession
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: hospital_profession
+        column_mapping:
+          profession_id: profession_id
+          hospital_id: hospital_id
   - name: profession
     using:
       foreign_key_constraint_on: profession_id
