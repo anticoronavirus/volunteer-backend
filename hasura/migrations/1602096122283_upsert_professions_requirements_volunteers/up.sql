@@ -32,16 +32,19 @@ hospital_profession as (
     cross join default_profession
     on conflict do nothing
 ),
+generic_description as (
+    select 'Вы можете сдать бесплатно все анализы и сделать необходимые прививки в своей поликлинике, получив направление на их сдачу у своего участкового врача. Для подтверждения в больницу необходимо предоставить справки или отметки в медицинской книжке, бланк которой по желанию можно оформить в филиалах Центра Гигиены и Эпидемиологии.' as value
+),
 next_requirements as (
-    insert into requirement(name, protected) values
-        ('Инструктаж', true),
-        ('Анализ на ВИЧ', false),
-        ('Флюорография', false),
-        ('Прививка ADC (Дифтерия)', false),
-        ('Прививка от гепатита Б', false),
-        ('Прививка от кори', false),
-        ('Анализ на Covid 19 (антитела)', false)
-    on conflict(name) do update set name = EXCLUDED.name, protected = EXCLUDED.protected
+    insert into requirement(name, protected, description) values
+        ('Инструктаж', true, (select value from generic_description)),
+        ('Анализ на ВИЧ', false, (select value from generic_description)),
+        ('Флюорография', false, (select value from generic_description)),
+        ('Прививка ADC (Дифтерия)', false, (select value from generic_description)),
+        ('Прививка от гепатита Б', false, (select value from generic_description)),
+        ('Прививка от кори', false, (select value from generic_description)),
+        ('Анализ на Covid 19 (антитела)', false, (select value from generic_description))
+    on conflict(name) do update set name = EXCLUDED.name, protected = EXCLUDED.protected, description = EXCLUDED.description
     returning uid
 ),
 updated_users as (
