@@ -165,25 +165,31 @@
   - role: volunteer
     permission:
       columns:
+      - active
       - address
       - directions
       - inn
       - name
       - phone
+      - settlement
       - shortname
       - uid
-      filter: {}
+      filter:
+        active: true
   - role: voyeur
     permission:
       columns:
+      - active
       - address
       - directions
       - inn
       - name
       - phone
+      - settlement
       - shortname
       - uid
-      filter: {}
+      filter:
+        active: true
   update_permissions:
   - role: volunteer
     permission:
