@@ -976,7 +976,13 @@
   - role: voyeur
     permission:
       columns:
+      - car
+      - comment
+      - email
       - fname
+      - hospital_id
+      - is_hatching
+      - licenceplate
       - lname
       - mname
       - phone
