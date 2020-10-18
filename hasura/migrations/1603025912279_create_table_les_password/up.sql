@@ -1,0 +1,1 @@
+CREATE TABLE "les"."password"("uid" uuid NOT NULL, "volunteer_id" uuid NOT NULL, "password" varchar NOT NULL, "expires_at" timestamptz NOT NULL, PRIMARY KEY ("uid") , FOREIGN KEY ("volunteer_id") REFERENCES "public"."volunteer"("uid") ON UPDATE cascade ON DELETE cascade);

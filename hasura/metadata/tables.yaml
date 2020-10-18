@@ -2,6 +2,9 @@
     schema: les
     name: miserables
 - table:
+    schema: les
+    name: password
+- table:
     schema: public
     name: blacklist
   object_relationships:
@@ -66,18 +69,6 @@
           seen_hints:
             user_id:
               _eq: X-Hasura-User-Id
-  - role: voyeur
-    permission:
-      columns:
-      - uid
-      - text
-      - name
-      filter:
-        _exists:
-          _where: {}
-          _table:
-            schema: public
-            name: me
 - table:
     schema: public
     name: hospital
@@ -384,63 +375,6 @@
             coordinators:
               uid:
                 _eq: X-Hasura-User-Id
-- table:
-    schema: public
-    name: me
-  array_relationships:
-  - name: managedHospitals
-    using:
-      manual_configuration:
-        remote_table:
-          schema: public
-          name: hospital_coordinator
-        column_mapping:
-          phone: coophone
-  select_permissions:
-  - role: volunteer
-    permission:
-      columns:
-      - car
-      - comment
-      - created_at
-      - email
-      - fname
-      - hospital_id
-      - is_hatching
-      - licenceplate
-      - lname
-      - mname
-      - password
-      - phone
-      - profession
-      - role
-      - uid
-      - updated_at
-      filter:
-        uid:
-          _eq: X-Hasura-User-Id
-  - role: voyeur
-    permission:
-      columns:
-      - car
-      - comment
-      - created_at
-      - email
-      - fname
-      - hospital_id
-      - is_hatching
-      - licenceplate
-      - lname
-      - mname
-      - password
-      - phone
-      - profession
-      - role
-      - uid
-      - updated_at
-      filter:
-        uid:
-          _is_null: true
 - table:
     schema: public
     name: page
@@ -905,6 +839,25 @@
       columns:
       - hint_id
       - user_id
+  select_permissions:
+  - role: volunteer
+    permission:
+      columns:
+      - hint_id
+      - uid
+      - user_id
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+  - role: voyeur
+    permission:
+      columns:
+      - user_id
+      - uid
+      - hint_id
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
 - table:
     schema: public
     name: special_shift
@@ -1000,7 +953,6 @@
       - licenceplate
       - lname
       - mname
-      - password
       - phone
       - profession
       - role
@@ -1045,7 +997,6 @@
       - licenceplate
       - lname
       - mname
-      - password
       - phone
       - profession
       - role
